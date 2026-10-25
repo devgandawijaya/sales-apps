@@ -1,0 +1,128 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PUID: 1000
+        PGID: 1000
+    container_name: sales_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-sales_dist_db}
+      - DB_USERNAME=${DB_USERNAME:-sales_admin}
+      - DB_PASSWORD=${DB_PASSWORD:-SecretSales2026!}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+      - CACHE_STORE=redis
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sales_net
+
+  webserver:
+    image: nginx:alpine
+    container_name: sales_webserver
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - sales_net
+
+  db:
+    image: postgres:16-alpine
+    container_name: sales_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-sales_dist_db}
+      POSTGRES_USER: ${DB_USERNAME:-sales_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-SecretSales2026!}
+    volumes:
+      - sales_pgdata:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT_FORWARD:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-sales_admin} -d ${DB_DATABASE:-sales_dist_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sales_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: sales_redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT_FORWARD:-6379}:6379"
+    volumes:
+      - sales_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - sales_net
+
+  queue_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sales_queue_worker
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - app
+      - db
+      - redis
+    command: php artisan queue:work redis --queue=high,default,low --sleep=3 --tries=3 --timeout=90
+    networks:
+      - sales_net
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sales_scheduler
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - app
+      - db
+      - redis
+    command: php artisan schedule:work
+    networks:
+      - sales_net
+
+networks:
+  sales_net:
+    driver: bridge
+
+volumes:
+  sales_pgdata:
+    driver: local
+  sales_redisdata:
+    driver: local
+

@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Domain\Inventory\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Domain\Organization\Models\Warehouse;
+use App\Domain\Product\Models\Product;
+
+class Stock extends Model
+{
+    protected $table = 'stocks';
+
+    protected $fillable = [
+        'warehouse_id',
+        'product_id',
+        'batch_number',
+        'expiry_date',
+        'qty_on_hand',
+        'qty_reserved',
+    ];
+
+    protected $casts = [
+        'expiry_date' => 'date',
+        'qty_on_hand' => 'integer',
+        'qty_reserved' => 'integer',
+    ];
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function getQtyAvailableAttribute(): int
+    {
+        return max(0, $this->qty_on_hand - $this->qty_reserved);
+    }
+}
+

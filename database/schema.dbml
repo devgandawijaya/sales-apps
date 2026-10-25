@@ -1,0 +1,895 @@
+// ==============================================================================
+// ENTERPRISE MULTI-BRANCH SALES & DISTRIBUTION MANAGEMENT SYSTEM (GT & MT)
+// Relational Database Schema in DBML (Database Markup Language)
+// ==============================================================================
+
+Project SalesDistributionSystem {
+  database_type: 'PostgreSQL'
+  Note: '''
+    Enterprise Multi-Entity Sales & Distribution Blueprint
+    Supporting General Trade (GT) and Modern Trade (MT) channels,
+    Multi-Branch, Multi-Warehouse (FIFO/FEFO), AR Aging, and Taxation.
+  '''
+}
+
+// -----------------------------------------------------------------------------
+// 1. ORGANISASI & MULTI-CABANG (BRANCHES, WAREHOUSES, USERS, RBAC)
+// -----------------------------------------------------------------------------
+
+Table branches {
+  id bigserial [pk]
+  code varchar(20) [unique, not null, note: 'Kode Unik Cabang (e.g. BR-JKT-01)']
+  name varchar(100) [not null]
+  type varchar(30) [not null, default: 'BRANCH', note: 'HEAD_OFFICE, BRANCH, SUB_BRANCH']
+  address text [not null]
+  city varchar(100) [not null]
+  province varchar(100) [not null]
+  phone varchar(30)
+  email varchar(100)
+  is_active boolean [not null, default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    code [name: 'idx_branches_code']
+    is_active [name: 'idx_branches_active']
+  }
+}
+
+Table warehouses {
+  id bigserial [pk]
+  branch_id bigint [not null, ref: > branches.id]
+  code varchar(30) [unique, not null, note: 'Kode Gudang (e.g. WH-JKT-MAIN)']
+  name varchar(100) [not null]
+  type varchar(30) [not null, default: 'BRANCH_MAIN', note: 'CENTRAL_DC, BRANCH_MAIN, CANVASS_VAN, BAD_STOCK, TRANSIT']
+  address text
+  is_active boolean [not null, default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    branch_id [name: 'idx_warehouses_branch']
+    code [name: 'idx_warehouses_code']
+    type [name: 'idx_warehouses_type']
+  }
+}
+
+Table users {
+  id bigserial [pk]
+  branch_id bigint [ref: > branches.id, note: 'NULL for Superadmin / HO']
+  name varchar(100) [not null]
+  email varchar(100) [unique, not null]
+  password varchar(255) [not null]
+  phone varchar(30)
+  role_title varchar(50) [not null, note: 'SUPERADMIN, BRANCH_MANAGER, SALES_ADMIN, FINANCE, SALESMAN_GT, KAM_MT, WAREHOUSE_KEEPER']
+  channel_assignment varchar(20) [default: 'ALL', note: 'GT, MT, ALL']
+  is_active boolean [not null, default: true]
+  remember_token varchar(100)
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    email [name: 'idx_users_email']
+    branch_id [name: 'idx_users_branch']
+    role_title [name: 'idx_users_role']
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 2. MASTER PRODUK & MULTI-TIER PRICING
+// -----------------------------------------------------------------------------
+
+Table categories {
+  id bigserial [pk]
+  parent_id bigint [ref: > categories.id]
+  code varchar(30) [unique, not null]
+  name varchar(100) [not null]
+  slug varchar(120) [unique, not null]
+  is_active boolean [not null, default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table products {
+  id bigserial [pk]
+  category_id bigint [not null, ref: > categories.id]
+  sku varchar(50) [unique, not null]
+  barcode varchar(50) [unique]
+  name varchar(200) [not null]
+  brand varchar(100)
+  base_uom varchar(20) [not null, default: 'PCS', note: 'Satuan terkecil untuk stok']
+  cost_price numeric(15, 2) [not null, default: 0, note: 'HPP / COGS']
+  weight_gram numeric(10, 2) [default: 0]
+  volume_cbm numeric(10, 4) [default: 0]
+  is_active boolean [not null, default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    sku [name: 'idx_products_sku']
+    category_id [name: 'idx_products_category']
+    is_active [name: 'idx_products_active']
+  }
+}
+
+Table product_units {
+  id bigserial [pk]
+  product_id bigint [not null, ref: > products.id]
+  unit_name varchar(30) [not null, note: 'DUS, KARTON, PAK, PCS']
+  conversion_factor int [not null, default: 1, note: 'Faktor konversi ke base_uom (misal: 1 Dus = 24 Pcs)']
+  barcode varchar(50)
+  is_base_unit boolean [not null, default: false]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (product_id, unit_name) [unique, name: 'idx_prod_unit_unique']
+  }
+}
+
+Table price_lists {
+  id bigserial [pk]
+  code varchar(30) [unique, not null]
+  name varchar(100) [not null]
+  channel_type varchar(30) [not null, note: 'GT, MT, WHOLESALE, RETAIL, ALL']
+  currency varchar(10) [default: 'IDR']
+  valid_from date [not null]
+  valid_to date
+  is_active boolean [not null, default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    code [name: 'idx_pricelist_code']
+    channel_type [name: 'idx_pricelist_channel']
+  }
+}
+
+Table price_list_items {
+  id bigserial [pk]
+  price_list_id bigint [not null, ref: > price_lists.id]
+  product_id bigint [not null, ref: > products.id]
+  product_unit_id bigint [not null, ref: > product_units.id]
+  min_quantity int [not null, default: 1, note: 'Volume tier quantity']
+  unit_price numeric(15, 2) [not null]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (price_list_id, product_id, product_unit_id, min_quantity) [unique, name: 'idx_price_tier_unique']
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 3. MASTER PELANGGAN (GT vs MT CHANNEL)
+// -----------------------------------------------------------------------------
+
+Table customers {
+  id bigserial [pk]
+  branch_id bigint [not null, ref: > branches.id]
+  code varchar(30) [unique, not null, note: 'e.g. CUST-GT-001 or CUST-MT-INDO']
+  name varchar(150) [not null]
+  owner_name varchar(100)
+  channel varchar(20) [not null, note: 'GT (General Trade) or MT (Modern Trade)']
+  sub_channel varchar(50) [not null, note: 'WARUNG, TOKO_KELONTONG, GROSIR, MINIMARKET_CHAIN, HYPERMARKET']
+  tax_id_npwp varchar(50)
+  nik varchar(30)
+  phone varchar(30)
+  email varchar(100)
+  address text [not null]
+  city varchar(100) [not null]
+  latitude numeric(10, 7) [note: 'GPS Latitude for check-in validation']
+  longitude numeric(10, 7) [note: 'GPS Longitude for check-in validation']
+  geofence_radius_meters int [default: 100, note: 'Max allowed distance for visit check-in']
+  credit_limit numeric(15, 2) [not null, default: 0]
+  current_credit_used numeric(15, 2) [not null, default: 0]
+  term_of_payment int [not null, default: 0, note: 'Hari tempo (e.g. 0=COD, 7, 14, 30, 60, 90)']
+  payment_type varchar(20) [default: 'COD', note: 'COD, CREDIT']
+  price_list_id bigint [ref: > price_lists.id]
+  is_active boolean [not null, default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    code [name: 'idx_customers_code']
+    branch_id [name: 'idx_customers_branch']
+    channel [name: 'idx_customers_channel']
+    (latitude, longitude) [name: 'idx_customers_geo']
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 4. KHUSUS GENERAL TRADE & MODERN TRADE (VISITS, PROMOTIONS, AGREEMENTS)
+// -----------------------------------------------------------------------------
+
+Table sales_routes {
+  id bigserial [pk]
+  branch_id bigint [not null, ref: > branches.id]
+  salesman_id bigint [not null, ref: > users.id]
+  route_code varchar(30) [not null]
+  route_name varchar(100) [not null]
+  day_of_week varchar(15) [not null, note: 'MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY']
+  visit_frequency varchar(20) [default: 'WEEKLY', note: 'WEEKLY, BIWEEKLY, MONTHLY']
+  is_active boolean [not null, default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (salesman_id, route_code) [name: 'idx_sales_routes_salesman']
+  }
+}
+
+Table route_customers {
+  id bigserial [pk]
+  route_id bigint [not null, ref: > sales_routes.id]
+  customer_id bigint [not null, ref: > customers.id]
+  sequence_order int [not null, default: 1]
+  created_at timestamp [default: `now()`]
+
+  indexes {
+    (route_id, customer_id) [unique, name: 'idx_route_cust_unique']
+  }
+}
+
+Table customer_visits {
+  id bigserial [pk]
+  salesman_id bigint [not null, ref: > users.id]
+  customer_id bigint [not null, ref: > customers.id]
+  route_id bigint [ref: > sales_routes.id]
+  visit_date date [not null]
+  check_in_at timestamp
+  check_out_at timestamp
+  latitude_in numeric(10, 7)
+  longitude_in numeric(10, 7)
+  latitude_out numeric(10, 7)
+  longitude_out numeric(10, 7)
+  is_in_radius boolean [default: false]
+  selfie_photo_path varchar(255)
+  notes text
+  status varchar(30) [not null, default: 'PLANNED', note: 'PLANNED, VISITED, NOT_VISITED, SKIP']
+  reason_code varchar(50) [note: 'TOKO_TUTUP, OWNER_TIDAK_ADA, STOK_LENGKAP']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (salesman_id, visit_date) [name: 'idx_visits_salesman_date']
+    customer_id [name: 'idx_visits_customer']
+  }
+}
+
+Table promotions {
+  id bigserial [pk]
+  branch_id bigint [ref: > branches.id, note: 'NULL for all branches']
+  code varchar(30) [unique, not null]
+  name varchar(150) [not null]
+  promo_type varchar(30) [not null, note: 'DISCOUNT_PERCENT, DISCOUNT_NOMINAL, BUY_X_GET_Y, BUNDLE']
+  channel varchar(20) [not null, default: 'ALL', note: 'GT, MT, ALL']
+  start_date date [not null]
+  end_date date [not null]
+  min_purchase_amount numeric(15, 2) [default: 0]
+  min_purchase_qty int [default: 0]
+  discount_rate numeric(5, 2) [default: 0, note: 'Diskon Persen']
+  discount_nominal numeric(15, 2) [default: 0, note: 'Diskon Rupiah']
+  free_product_id bigint [ref: > products.id]
+  free_qty int [default: 0]
+  is_active boolean [not null, default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table modern_trade_agreements {
+  id bigserial [pk]
+  customer_id bigint [not null, ref: > customers.id]
+  contract_number varchar(100) [unique, not null]
+  start_date date [not null]
+  end_date date [not null]
+  listing_fee_total numeric(15, 2) [default: 0]
+  slotting_fee_total numeric(15, 2) [default: 0]
+  on_invoice_discount_rate numeric(5, 2) [default: 0]
+  off_invoice_rebate_rate numeric(5, 2) [default: 0]
+  payment_terms_days int [not null, default: 30]
+  penalty_terms text
+  document_attachment_path varchar(255)
+  status varchar(20) [not null, default: 'ACTIVE', note: 'DRAFT, ACTIVE, EXPIRED, TERMINATED']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    customer_id [name: 'idx_mta_customer']
+    status [name: 'idx_mta_status']
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 5. INVENTORY & GUDANG (FEFO/FIFO, MUTASI, INTER-BRANCH TRANSFER)
+// -----------------------------------------------------------------------------
+
+Table stocks {
+  id bigserial [pk]
+  warehouse_id bigint [not null, ref: > warehouses.id]
+  product_id bigint [not null, ref: > products.id]
+  batch_number varchar(50) [not null]
+  expiry_date date [not null, note: 'FEFO sorting priority']
+  qty_on_hand int [not null, default: 0, note: 'Fisik barang di gudang (Base UOM)']
+  qty_reserved int [not null, default: 0, note: 'Alokasi SO belum kirim']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (warehouse_id, product_id, batch_number) [unique, name: 'idx_stocks_wh_prod_batch']
+    expiry_date [name: 'idx_stocks_expiry']
+  }
+}
+
+Table stock_mutations {
+  id bigserial [pk]
+  warehouse_id bigint [not null, ref: > warehouses.id]
+  product_id bigint [not null, ref: > products.id]
+  batch_number varchar(50) [not null]
+  transaction_type varchar(40) [not null, note: 'INITIAL, RECEIVING, SO_DELIVERY, RETURN_GOOD, RETURN_BAD, TRANSFER_IN, TRANSFER_OUT, ADJUSTMENT']
+  reference_type varchar(40) [not null, note: 'SO, DO, TRANSFER, ADJUSTMENT, RETURN']
+  reference_id bigint [not null]
+  qty_in int [not null, default: 0]
+  qty_out int [not null, default: 0]
+  balance_after int [not null]
+  notes text
+  created_by bigint [not null, ref: > users.id]
+  created_at timestamp [default: `now()`]
+
+  indexes {
+    (warehouse_id, product_id) [name: 'idx_mutations_wh_prod']
+    (reference_type, reference_id) [name: 'idx_mutations_ref']
+  }
+}
+
+Table stock_transfers {
+  id bigserial [pk]
+  transfer_number varchar(50) [unique, not null]
+  from_warehouse_id bigint [not null, ref: > warehouses.id]
+  to_warehouse_id bigint [not null, ref: > warehouses.id]
+  transit_warehouse_id bigint [ref: > warehouses.id]
+  driver_name varchar(100)
+  vehicle_number varchar(30)
+  status varchar(30) [not null, default: 'DRAFT', note: 'DRAFT, PENDING_APPROVAL, IN_TRANSIT, RECEIVED_FULL, RECEIVED_PARTIAL, CANCELLED']
+  sent_date timestamp
+  received_date timestamp
+  notes text
+  created_by bigint [not null, ref: > users.id]
+  received_by bigint [ref: > users.id]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    transfer_number [name: 'idx_transfers_no']
+    status [name: 'idx_transfers_status']
+  }
+}
+
+Table stock_transfer_items {
+  id bigserial [pk]
+  stock_transfer_id bigint [not null, ref: > stock_transfers.id]
+  product_id bigint [not null, ref: > products.id]
+  product_unit_id bigint [not null, ref: > product_units.id]
+  batch_number varchar(50) [not null]
+  expiry_date date [not null]
+  qty_sent int [not null]
+  qty_received int [not null, default: 0]
+  discrepancy_qty int [not null, default: 0]
+  condition_status varchar(30) [default: 'GOOD', note: 'GOOD, DAMAGED']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+// -----------------------------------------------------------------------------
+// 6. TRANSAKSI PENJUALAN & PENGIRIMAN (SO, DO, INVOICE, PAYMENT, RETURN)
+// -----------------------------------------------------------------------------
+
+Table sales_orders {
+  id bigserial [pk]
+  branch_id bigint [not null, ref: > branches.id]
+  customer_id bigint [not null, ref: > customers.id]
+  salesman_id bigint [not null, ref: > users.id]
+  warehouse_id bigint [not null, ref: > warehouses.id]
+  so_number varchar(50) [unique, not null]
+  po_number_mt varchar(100) [note: 'Purchase Order resmi Modern Trade']
+  order_date date [not null]
+  channel varchar(20) [not null, note: 'GT, MT']
+  order_type varchar(30) [not null, default: 'TAKING_ORDER', note: 'TAKING_ORDER, CANVASS, MODERN_TRADE_PO']
+  status varchar(30) [not null, default: 'DRAFT', note: 'DRAFT, PENDING_APPROVAL, APPROVED, REJECTED, PROCESSING, PARTIAL_DELIVERED, DELIVERED, CANCELLED']
+  payment_term_days int [not null, default: 0]
+  subtotal numeric(15, 2) [not null, default: 0]
+  discount_on_invoice numeric(15, 2) [not null, default: 0]
+  discount_off_invoice numeric(15, 2) [not null, default: 0]
+  tax_amount numeric(15, 2) [not null, default: 0, note: 'PPN 11%']
+  grand_total numeric(15, 2) [not null, default: 0]
+  approval_level int [default: 0]
+  approved_by bigint [ref: > users.id]
+  approved_at timestamp
+  notes text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    so_number [name: 'idx_so_number']
+    branch_id [name: 'idx_so_branch']
+    customer_id [name: 'idx_so_customer']
+    order_date [name: 'idx_so_date']
+    status [name: 'idx_so_status']
+  }
+}
+
+Table sales_order_items {
+  id bigserial [pk]
+  sales_order_id bigint [not null, ref: > sales_orders.id]
+  product_id bigint [not null, ref: > products.id]
+  product_unit_id bigint [not null, ref: > product_units.id]
+  conversion_factor int [not null, default: 1]
+  qty_ordered int [not null]
+  qty_in_base_uom int [not null]
+  qty_delivered_base_uom int [not null, default: 0]
+  unit_price numeric(15, 2) [not null]
+  gross_amount numeric(15, 2) [not null]
+  discount_percent_1 numeric(5, 2) [default: 0]
+  discount_percent_2 numeric(5, 2) [default: 0]
+  discount_nominal numeric(15, 2) [default: 0]
+  net_amount numeric(15, 2) [not null]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    sales_order_id [name: 'idx_so_items_order']
+    product_id [name: 'idx_so_items_prod']
+  }
+}
+
+Table delivery_orders {
+  id bigserial [pk]
+  branch_id bigint [not null, ref: > branches.id]
+  warehouse_id bigint [not null, ref: > warehouses.id]
+  sales_order_id bigint [not null, ref: > sales_orders.id]
+  do_number varchar(50) [unique, not null]
+  delivery_date date [not null]
+  delivery_type varchar(30) [not null, default: 'DIRECT_STORE', note: 'DIRECT_STORE, CENTRAL_DC, CANVASS_DIRECT']
+  status varchar(30) [not null, default: 'PREPARED', note: 'PREPARED, DISPATCHED, DELIVERED, RETURNED, CANCELLED']
+  driver_name varchar(100)
+  vehicle_plate_number varchar(30)
+  recipient_name varchar(100)
+  proof_of_delivery_path varchar(255)
+  delivered_at timestamp
+  notes text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    do_number [name: 'idx_do_number']
+    sales_order_id [name: 'idx_do_sales_order']
+    status [name: 'idx_do_status']
+  }
+}
+
+Table delivery_order_items {
+  id bigserial [pk]
+  delivery_order_id bigint [not null, ref: > delivery_orders.id]
+  sales_order_item_id bigint [not null, ref: > sales_order_items.id]
+  product_id bigint [not null, ref: > products.id]
+  batch_number varchar(50) [not null]
+  expiry_date date [not null]
+  qty_shipped int [not null]
+  qty_received int [not null, default: 0]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table invoices {
+  id bigserial [pk]
+  branch_id bigint [not null, ref: > branches.id]
+  customer_id bigint [not null, ref: > customers.id]
+  sales_order_id bigint [not null, ref: > sales_orders.id]
+  delivery_order_id bigint [ref: > delivery_orders.id]
+  invoice_number varchar(50) [unique, not null]
+  invoice_date date [not null]
+  due_date date [not null]
+  tax_invoice_number varchar(50) [note: 'Nomor Seri Faktur Pajak (NSFP)']
+  tax_invoice_date date
+  status varchar(20) [not null, default: 'UNPAID', note: 'UNPAID, PARTIAL, PAID, OVERDUE, CANCELLED']
+  subtotal numeric(15, 2) [not null]
+  tax_amount numeric(15, 2) [not null]
+  grand_total numeric(15, 2) [not null]
+  paid_amount numeric(15, 2) [not null, default: 0]
+  balance_due numeric(15, 2) [not null]
+  tukar_faktur_date date [note: 'Tanggal tanda terima tukar faktur MT']
+  tukar_faktur_receipt_number varchar(100)
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    invoice_number [name: 'idx_invoices_num']
+    customer_id [name: 'idx_invoices_cust']
+    due_date [name: 'idx_invoices_due']
+    status [name: 'idx_invoices_status']
+  }
+}
+
+Table payments {
+  id bigserial [pk]
+  branch_id bigint [not null, ref: > branches.id]
+  customer_id bigint [not null, ref: > customers.id]
+  payment_number varchar(50) [unique, not null]
+  payment_date date [not null]
+  payment_method varchar(30) [not null, note: 'CASH, BANK_TRANSFER, GIRO, CHECK']
+  amount numeric(15, 2) [not null]
+  bank_name varchar(100)
+  reference_no_giro varchar(100)
+  giro_due_date date
+  giro_status varchar(30) [default: 'CLEARED', note: 'PENDING, CLEARED, BOUNCED']
+  proof_document_path varchar(255)
+  notes text
+  created_by bigint [not null, ref: > users.id]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    payment_number [name: 'idx_payments_num']
+    customer_id [name: 'idx_payments_cust']
+    payment_date [name: 'idx_payments_date']
+  }
+}
+
+Table payment_allocations {
+  id bigserial [pk]
+  payment_id bigint [not null, ref: > payments.id]
+  invoice_id bigint [not null, ref: > invoices.id]
+  allocated_amount numeric(15, 2) [not null]
+  created_at timestamp [default: `now()`]
+
+  indexes {
+    (payment_id, invoice_id) [name: 'idx_pay_alloc_unique']
+  }
+}
+
+Table sales_returns {
+  id bigserial [pk]
+  branch_id bigint [not null, ref: > branches.id]
+  customer_id bigint [not null, ref: > customers.id]
+  warehouse_id bigint [not null, ref: > warehouses.id]
+  invoice_id bigint [ref: > invoices.id]
+  return_number varchar(50) [unique, not null]
+  return_date date [not null]
+  return_type varchar(30) [not null, note: 'GOOD_STOCK, BAD_STOCK_EXPIRED, BAD_STOCK_DAMAGED']
+  total_amount numeric(15, 2) [not null, default: 0]
+  status varchar(30) [not null, default: 'PENDING', note: 'PENDING, APPROVED, COMPLETED, REJECTED']
+  approved_by bigint [ref: > users.id]
+  notes text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    return_number [name: 'idx_returns_num']
+    customer_id [name: 'idx_returns_cust']
+  }
+}
+
+Table sales_return_items {
+  id bigserial [pk]
+  sales_return_id bigint [not null, ref: > sales_returns.id]
+  product_id bigint [not null, ref: > products.id]
+  product_unit_id bigint [not null, ref: > product_units.id]
+  batch_number varchar(50) [not null]
+  qty int [not null]
+  unit_price numeric(15, 2) [not null]
+  subtotal numeric(15, 2) [not null]
+  reason text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+// -----------------------------------------------------------------------------
+// 7. ADVANCED WMS, PROCUREMENT, FLEET, & FINANCIAL INSTRUMENTS
+// -----------------------------------------------------------------------------
+
+Table companies {
+  id bigserial [pk]
+  code varchar(30) [unique, not null]
+  name varchar(150) [not null]
+  tax_id_npwp varchar(50)
+  address text
+  city varchar(100)
+  country varchar(100) [default: 'Indonesia']
+  currency varchar(10) [default: 'IDR']
+  is_active boolean [default: true]
+  deleted_at timestamp
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (code, is_active) [name: 'idx_companies_code_active']
+  }
+}
+
+Table warehouse_bins {
+  id bigserial [pk]
+  warehouse_id bigint [not null, ref: > warehouses.id]
+  bin_code varchar(50) [unique, not null, note: 'e.g. WH1-A01-R02-T03-B04']
+  zone varchar(30) [default: 'GENERAL', note: 'FAST_MOVING, COLD_ROOM, QUARANTINE, GENERAL']
+  aisle varchar(10) [not null]
+  rack varchar(10) [not null]
+  tier varchar(10) [not null]
+  bin varchar(10) [not null]
+  max_weight_kg numeric(10, 2) [default: 1000]
+  max_volume_cbm numeric(10, 4) [default: 5.0]
+  is_occupied boolean [default: false]
+  is_active boolean [default: true]
+  deleted_at timestamp
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (warehouse_id, zone) [name: 'idx_bins_wh_zone']
+    (aisle, rack) [name: 'idx_bins_aisle_rack']
+  }
+}
+
+Table batches {
+  id bigserial [pk]
+  product_id bigint [not null, ref: > products.id]
+  batch_number varchar(50) [not null]
+  manufacture_date date
+  expiry_date date [not null]
+  qc_status varchar(30) [default: 'PASSED', note: 'PENDING_QC, PASSED, REJECTED, QUARANTINE']
+  notes text
+  deleted_at timestamp
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (product_id, batch_number) [unique, name: 'idx_batches_prod_batch_unique']
+    (product_id, expiry_date) [name: 'idx_batches_expiry']
+  }
+}
+
+Table purchase_orders {
+  id bigserial [pk]
+  branch_id bigint [not null, ref: > branches.id]
+  warehouse_id bigint [not null, ref: > warehouses.id]
+  po_number varchar(50) [unique, not null]
+  supplier_name varchar(150) [not null]
+  supplier_code varchar(50)
+  order_date date [not null]
+  expected_delivery_date date
+  status varchar(30) [default: 'APPROVED', note: 'DRAFT, APPROVED, PARTIAL_RECEIVED, COMPLETED, CANCELLED']
+  subtotal numeric(15, 2) [default: 0]
+  tax_amount numeric(15, 2) [default: 0]
+  grand_total numeric(15, 2) [default: 0]
+  created_by bigint [not null, ref: > users.id]
+  deleted_at timestamp
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (branch_id, status) [name: 'idx_po_branch_status']
+    order_date [name: 'idx_po_order_date']
+  }
+}
+
+Table purchase_order_items {
+  id bigserial [pk]
+  purchase_order_id bigint [not null, ref: > purchase_orders.id]
+  product_id bigint [not null, ref: > products.id]
+  product_unit_id bigint [not null, ref: > product_units.id]
+  conversion_factor int [default: 1]
+  qty_ordered int [not null]
+  qty_in_base_uom int [not null]
+  qty_received_base_uom int [default: 0]
+  unit_price numeric(15, 2) [not null]
+  subtotal numeric(15, 2) [not null]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (purchase_order_id, product_id) [name: 'idx_po_items_po_prod']
+  }
+}
+
+Table goods_receipts {
+  id bigserial [pk]
+  branch_id bigint [not null, ref: > branches.id]
+  warehouse_id bigint [not null, ref: > warehouses.id]
+  purchase_order_id bigint [ref: > purchase_orders.id]
+  grn_number varchar(50) [unique, not null]
+  supplier_delivery_note varchar(100) [not null]
+  receive_date date [not null]
+  receipt_type varchar(30) [default: 'STANDARD', note: 'STANDARD, BLIND_RECEIPT']
+  status varchar(30) [default: 'COMPLETED', note: 'DRAFT, VERIFIED, COMPLETED, DISCREPANCY_HOLD']
+  driver_name varchar(100)
+  vehicle_plate_number varchar(30)
+  received_by bigint [not null, ref: > users.id]
+  notes text
+  deleted_at timestamp
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (branch_id, receive_date) [name: 'idx_grn_branch_date']
+    grn_number [name: 'idx_grn_number']
+  }
+}
+
+Table goods_receipt_items {
+  id bigserial [pk]
+  goods_receipt_id bigint [not null, ref: > goods_receipts.id]
+  purchase_order_item_id bigint [ref: > purchase_order_items.id]
+  product_id bigint [not null, ref: > products.id]
+  product_unit_id bigint [not null, ref: > product_units.id]
+  warehouse_bin_id bigint [ref: > warehouse_bins.id]
+  batch_number varchar(50) [not null]
+  expiry_date date [not null]
+  qty_expected_base_uom int [default: 0]
+  qty_received_base_uom int [not null]
+  qty_discrepancy_base_uom int [default: 0]
+  condition_status varchar(30) [default: 'GOOD', note: 'GOOD, QC_PENDING, DAMAGED']
+  unit_cost numeric(15, 2) [default: 0]
+  discrepancy_reason text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (goods_receipt_id, product_id) [name: 'idx_grn_items_grn_prod']
+    (batch_number, expiry_date) [name: 'idx_grn_items_batch_expiry']
+  }
+}
+
+Table stock_adjustments {
+  id bigserial [pk]
+  branch_id bigint [not null, ref: > branches.id]
+  warehouse_id bigint [not null, ref: > warehouses.id]
+  adjustment_number varchar(50) [unique, not null]
+  adjustment_date date [not null]
+  adjustment_type varchar(30) [default: 'CYCLE_COUNT', note: 'CYCLE_COUNT, WALL_TO_WALL_OPNAME, DAMAGE_WRITE_OFF']
+  status varchar(30) [default: 'PENDING_APPROVAL', note: 'PENDING_APPROVAL, APPROVED, REJECTED']
+  total_cogs_loss numeric(15, 2) [default: 0]
+  conducted_by bigint [not null, ref: > users.id]
+  approved_by bigint [ref: > users.id]
+  approved_at timestamp
+  reason text
+  deleted_at timestamp
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (warehouse_id, status) [name: 'idx_adjustments_wh_status']
+  }
+}
+
+Table stock_adjustment_items {
+  id bigserial [pk]
+  stock_adjustment_id bigint [not null, ref: > stock_adjustments.id]
+  product_id bigint [not null, ref: > products.id]
+  batch_number varchar(50) [not null]
+  system_qty_base_uom int [not null]
+  physical_qty_base_uom int [not null]
+  discrepancy_qty_base_uom int [not null]
+  unit_cost numeric(15, 2) [not null]
+  discrepancy_cogs_value numeric(15, 2) [not null]
+  item_notes text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (stock_adjustment_id, product_id) [name: 'idx_adj_items_adj_prod']
+  }
+}
+
+Table trip_manifests {
+  id bigserial [pk]
+  branch_id bigint [not null, ref: > branches.id]
+  manifest_number varchar(50) [unique, not null]
+  trip_date date [not null]
+  vehicle_plate_number varchar(30) [not null]
+  driver_name varchar(100) [not null]
+  driver_phone varchar(30)
+  fleet_type varchar(50) [default: 'INTERNAL_BOX_COLT']
+  max_payload_kg numeric(10, 2) [default: 3000]
+  max_volume_cbm numeric(10, 4) [default: 14.0]
+  utilized_weight_kg numeric(10, 2) [default: 0]
+  utilized_volume_cbm numeric(10, 4) [default: 0]
+  status varchar(30) [default: 'ASSIGNED', note: 'ASSIGNED, LOADING, IN_TRANSIT, COMPLETED']
+  dispatched_at timestamp
+  returned_at timestamp
+  deleted_at timestamp
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (branch_id, trip_date) [name: 'idx_manifest_branch_date']
+    status [name: 'idx_manifest_status']
+  }
+}
+
+Table trip_manifest_orders {
+  id bigserial [pk]
+  trip_manifest_id bigint [not null, ref: > trip_manifests.id]
+  delivery_order_id bigint [not null, ref: > delivery_orders.id]
+  stop_sequence int [default: 1]
+  pod_status varchar(30) [default: 'PENDING', note: 'PENDING, DELIVERED, PARTIAL, FAILED']
+  pod_latitude numeric(10, 7)
+  pod_longitude numeric(10, 7)
+  pod_signature_path varchar(255)
+  pod_document_photo_path varchar(255)
+  pod_delivered_at timestamp
+  failure_reason text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (trip_manifest_id, delivery_order_id) [unique, name: 'idx_manifest_order_unique']
+  }
+}
+
+Table invoice_exchange_receipts {
+  id bigserial [pk]
+  branch_id bigint [not null, ref: > branches.id]
+  customer_id bigint [not null, ref: > customers.id]
+  receipt_number varchar(50) [unique, not null, note: 'Nomor TTF Tukar Faktur']
+  submission_date date [not null]
+  received_date date [not null]
+  payment_due_date date [not null, note: 'received_date + TOP']
+  terms_of_payment_days int [not null]
+  total_invoice_amount numeric(15, 2) [not null]
+  status varchar(30) [default: 'ACCEPTED', note: 'SUBMITTED, ACCEPTED, REJECTED, PAID']
+  document_attachment_path varchar(255)
+  handled_by bigint [not null, ref: > users.id]
+  notes text
+  deleted_at timestamp
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (customer_id, status) [name: 'idx_ttf_cust_status']
+    payment_due_date [name: 'idx_ttf_due_date']
+  }
+}
+
+Table payment_giros {
+  id bigserial [pk]
+  payment_id bigint [not null, ref: > payments.id]
+  customer_id bigint [not null, ref: > customers.id]
+  giro_number varchar(50) [not null]
+  bank_name varchar(100) [not null]
+  amount numeric(15, 2) [not null]
+  issue_date date [not null]
+  due_date date [not null]
+  deposited_date date
+  cleared_date date
+  rejected_date date
+  status varchar(30) [default: 'RECEIVED', note: 'RECEIVED, DEPOSITED, CLEARED, BOUNCED_REJECTED']
+  rejection_reason varchar(150)
+  giro_photo_path varchar(255)
+  deleted_at timestamp
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (customer_id, status) [name: 'idx_giro_cust_status']
+    (giro_number, due_date) [name: 'idx_giro_num_due']
+  }
+}
+
+Table invoice_items {
+  id bigserial [pk]
+  invoice_id bigint [not null, ref: > invoices.id]
+  product_id bigint [not null, ref: > products.id]
+  product_unit_id bigint [not null, ref: > product_units.id]
+  qty_invoiced int [not null]
+  unit_price numeric(15, 2) [not null]
+  discount_amount numeric(15, 2) [default: 0]
+  taxable_base numeric(15, 2) [not null]
+  tax_amount numeric(15, 2) [not null]
+  line_total numeric(15, 2) [not null]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (invoice_id, product_id) [name: 'idx_inv_items_inv_prod']
+  }
+}
+
