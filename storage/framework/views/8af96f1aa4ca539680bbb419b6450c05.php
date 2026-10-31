@@ -166,6 +166,14 @@
                 <span>Jejak Audit (Audit Log)</span>
             </a>
 
+            <div class="pt-4 text-[10px] uppercase font-bold text-slate-500 px-3 pb-2 tracking-wider">Halaman Web & Publik</div>
+
+            <a href="<?php echo e(route('landing-settings.index')); ?>" 
+               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition <?php echo e(request()->routeIs('landing-settings.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white'); ?>">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span>Pengaturan Landing Page</span>
+            </a>
+
             <?php if(auth()->check() && auth()->user()->isSuperAdmin()): ?>
                 <div class="pt-4 text-[10px] uppercase font-bold text-purple-400 px-3 pb-2 tracking-wider">Super Admin SaaS</div>
                 <a href="<?php echo e(route('superadmin.dashboard')); ?>" 
@@ -218,7 +226,7 @@
 
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    PostgreSQL 16 RLS
+                    Sistem Terenkripsi Aman
                 </span>
 
                 <?php if(auth()->guard()->check()): ?>
@@ -259,7 +267,7 @@
         <!-- Footer -->
         <footer class="bg-white border-t border-slate-200 py-4 px-4 sm:px-8 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
             <span>&copy; 2026 Enterprise Multi-Branch Sales & Distribution SaaS.</span>
-            <span>Dockerized Laravel 11 • PostgreSQL 16 • Redis 7 • Granular RBAC</span>
+            <span>Sistem Distribusi Terpadu • Multi-Cabang & Multi-Gudang • Hak Akses Terlindungi</span>
         </footer>
     </div>
 

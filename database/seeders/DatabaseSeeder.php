@@ -1445,5 +1445,10 @@ class DatabaseSeeder extends Seeder
         // COMPREHENSIVE DUMMY DATA (100+ REALISTIC FMCG BUSINESS RECORDS)
         // =====================================================================
         $this->call(ComprehensiveDummyDataSeeder::class);
+
+        // =====================================================================
+        // LANDING PAGE SLIDES & SETTINGS SEEDER
+        // =====================================================================
+        $this->call(LandingPageSeeder::class);
     }
 }

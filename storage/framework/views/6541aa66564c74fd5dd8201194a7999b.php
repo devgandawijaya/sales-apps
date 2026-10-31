@@ -1,4 +1,4 @@
-<?php $__env->startSection('title', 'Manajemen Pengguna & RBAC'); ?>
+<?php $__env->startSection('title', 'Manajemen Pengguna & Hak Akses'); ?>
 
 <?php $__env->startSection('content'); ?>
 <div class="space-y-6">
@@ -12,7 +12,7 @@
                 <span class="text-slate-800 font-bold">Daftar Pengguna</span>
             </div>
             <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Manajemen Staf & Akses Pengguna</h1>
-            <p class="text-xs text-slate-500">Kelola kredensial, peran RBAC granular, penempatan cabang, dan status aktif staf.</p>
+            <p class="text-xs text-slate-500">Kelola kredensial, peran otorisasi, penempatan cabang, dan status aktif staf.</p>
         </div>
 
         <div class="flex items-center space-x-3">
@@ -69,7 +69,7 @@
                     <tr>
                         <th class="py-3 px-4">Nama Pengguna</th>
                         <th class="py-3 px-4">Email / Kontak</th>
-                        <th class="py-3 px-4">Jabatan & RBAC Roles</th>
+                        <th class="py-3 px-4">Jabatan & Peran Otorisasi</th>
                         <th class="py-3 px-4">Cabang Penempatan</th>
                         <th class="py-3 px-4">Kanal</th>
                         <th class="py-3 px-4">Status</th>
@@ -206,7 +206,7 @@
                 </div>
 
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">RBAC Role Profil</label>
+                    <label class="block font-bold text-slate-700 mb-1">Profil Hak Akses</label>
                     <select name="role_id" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:outline-none">
                         <option value="">Gunakan Default Fungsional</option>
                         <?php $__currentLoopData = $roles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>

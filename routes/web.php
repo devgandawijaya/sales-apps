@@ -22,6 +22,9 @@ use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\StockLedgerController;
 use App\Http\Controllers\DeliveryOrderController;
 use App\Http\Controllers\SalesReturnController;
+use App\Http\Controllers\LandingSettingController;
+use App\Models\LandingSlide;
+use App\Models\LandingSetting;
 use App\Domain\Tenant\TenantContext;
 
 // =============================================================================
@@ -39,12 +42,66 @@ Route::post('/register-tenant', [TenantController::class, 'register'])->name('te
 // =============================================================================
 // WEB APPLICATION CORE ROUTES
 // =============================================================================
+// Landing Page (Sebelum ke halaman login)
 Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect()->route('dashboard');
+    $slides = LandingSlide::active()->get();
+    if ($slides->isEmpty()) {
+        $slides = collect([
+            (object)[
+                'id' => 1,
+                'title' => 'Pusat Distribusi Modern & Multi-Gudang',
+                'subtitle' => 'Pengendalian stok terpusat dengan prioritas barang kedaluwarsa terdekat dan pencatatan buku besar mutasi otomatis.',
+                'badge_text' => 'Gudang & Logistik',
+                'image_url' => 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1600&q=80',
+                'cta_text' => 'Lihat Modul Gudang',
+                'cta_link' => '#modul',
+                'sort_order' => 1,
+                'is_active' => true,
+            ],
+            (object)[
+                'id' => 2,
+                'title' => 'Armada Pengiriman & Surat Jalan Resmi',
+                'subtitle' => 'Penugasan supir, pelat nomor kendaraan armada, dan cetak tanda serah terima 3 rangkap untuk kepastian penerimaan barang.',
+                'badge_text' => 'Pengiriman Terjadwal',
+                'image_url' => 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1600&q=80',
+                'cta_text' => 'Pelajari Alur Pengiriman',
+                'cta_link' => '#alur',
+                'sort_order' => 2,
+                'is_active' => true,
+            ],
+            (object)[
+                'id' => 3,
+                'title' => 'Penyaluran Ritel Modern Trade & Kontrak Dagang',
+                'subtitle' => 'Pencocokan nomor PO resmi supermarket, kontrak dagang MTA, potongan harga langsung, dan faktur pajak PPN 11%.',
+                'badge_text' => 'Modern Trade (MT)',
+                'image_url' => 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=1600&q=80',
+                'cta_text' => 'Solusi Modern Trade',
+                'cta_link' => '#saluran',
+                'sort_order' => 3,
+                'is_active' => true,
+            ],
+            (object)[
+                'id' => 4,
+                'title' => 'Distribusi Pasar Tradisional & Rute Salesman',
+                'subtitle' => 'Jadwal kunjungan toko harian (Beat Plan), pesanan Taking Order, dan armada kanvas bawa stok langsung ke toko kelontong.',
+                'badge_text' => 'General Trade (GT)',
+                'image_url' => 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?auto=format&fit=crop&w=1600&q=80',
+                'cta_text' => 'Solusi General Trade',
+                'cta_link' => '#saluran',
+                'sort_order' => 4,
+                'is_active' => true,
+            ],
+        ]);
     }
-    return redirect()->route('login');
-});
+    $settings = LandingSetting::getAllSettings();
+    return view('landing', compact('slides', 'settings'));
+})->name('landing');
+
+// =============================================================================
+// PROTECTED CORE APPLICATION & API ROUTES (MEMERLUKAN AUTENTIKASI)
+// Proteksi ketat: Tidak ada data perusahaan atau data pribadi yang dapat diakses tanpa login.
+// =============================================================================
+Route::middleware(['auth'])->group(function () {
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -142,6 +199,14 @@ Route::get('/routes', [RoutePlanController::class, 'index'])->name('routes.index
 // =============================================================================
 // Tenant Workspace Settings
 Route::get('/tenant/settings', [TenantController::class, 'settings'])->name('tenant.settings');
+
+// Pengaturan Halaman Landing (Slideshow & Konten)
+Route::get('/landing-settings', [LandingSettingController::class, 'index'])->name('landing-settings.index');
+Route::post('/landing-settings/slides', [LandingSettingController::class, 'storeSlide'])->name('landing-settings.slides.store');
+Route::put('/landing-settings/slides/{id}', [LandingSettingController::class, 'updateSlide'])->name('landing-settings.slides.update');
+Route::post('/landing-settings/slides/{id}/toggle', [LandingSettingController::class, 'toggleSlide'])->name('landing-settings.slides.toggle');
+Route::delete('/landing-settings/slides/{id}', [LandingSettingController::class, 'destroySlide'])->name('landing-settings.slides.destroy');
+Route::post('/landing-settings/content', [LandingSettingController::class, 'updateContent'])->name('landing-settings.content.update');
 
 // User Management
 Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -295,4 +360,6 @@ Route::get('/api/v1/tenant/current', function () {
             ],
         ]
     ]);
+});
+
 });

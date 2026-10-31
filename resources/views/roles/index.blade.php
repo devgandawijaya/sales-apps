@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Matriks 19 Role & Hak Akses RBAC')
+@section('title', 'Matriks 19 Peran & Hak Akses Pengguna')
 
 @section('content')
 <div class="space-y-6">
@@ -11,10 +11,10 @@
             <div class="flex items-center space-x-2 text-xs text-slate-500 mb-1">
                 <a href="{{ route('users.index') }}" class="hover:text-blue-600 font-semibold">Pengguna</a>
                 <span>&rsaquo;</span>
-                <span class="text-slate-800 font-bold">Role & Permission Matrix</span>
+                <span class="text-slate-800 font-bold">Matriks Peran & Hak Akses</span>
             </div>
             <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Katalog 19 Peran & Matriks Otorisasi Granular</h1>
-            <p class="text-xs text-slate-500">Prinsip hak akses minimum (Least Privilege) yang ditegakkan langsung di backend.</p>
+            <p class="text-xs text-slate-500">Prinsip otorisasi aman yang membatasi hak akses sesuai tugas dan tanggung jawab masing-masing staf.</p>
         </div>
 
         <div>

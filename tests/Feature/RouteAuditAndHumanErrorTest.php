@@ -109,4 +109,22 @@ class RouteAuditAndHumanErrorTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Persetujuan Sales Order');
     }
+
+    public function test_landing_page_renders_successfully_before_login(): void
+    {
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $response->assertSee('Sales & Distribution', false);
+        $response->assertSee('Masuk ke Sistem');
+        $response->assertSee('phobehub.com');
+    }
+
+    public function test_login_page_renders_and_links_back_to_landing_page(): void
+    {
+        $response = $this->get('/login');
+        $response->assertStatus(200);
+        $response->assertSee('Masuk ke Akun Anda');
+        $response->assertSee('Kembali ke Beranda Utama');
+        $response->assertSee('phobehub.com');
+    }
 }

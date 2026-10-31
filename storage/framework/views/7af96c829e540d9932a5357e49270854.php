@@ -87,8 +87,8 @@
                 </div>
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>Database Terpadu</span>
-                <span class="text-blue-600 font-semibold">PostgreSQL</span>
+                <span>Penyimpanan Terpadu</span>
+                <span class="text-blue-600 font-semibold">Tersinkronisasi</span>
             </div>
         </div>
     </div>

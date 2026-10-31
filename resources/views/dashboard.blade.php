@@ -33,10 +33,10 @@
             <div class="flex items-center space-x-3">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    PostgreSQL & Redis Online
+                    Sistem & Database Aktif
                 </span>
                 <span class="hidden sm:inline-flex px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700">
-                    Port 8080
+                    Layanan Terhubung
                 </span>
             </div>
         </div>
@@ -169,8 +169,8 @@
                     <h2 class="text-base font-bold text-slate-900">Transaksi Sales Order Terbaru</h2>
                     <p class="text-xs text-slate-500">Daftar pesanan penjualan dari saluran GT dan MT</p>
                 </div>
-                <a href="/api/sales-orders" target="_blank" class="text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors">
-                    Lihat JSON API &rarr;
+                <a href="{{ route('sales.index') }}" class="text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors">
+                    Lihat Semua Pesanan &rarr;
                 </a>
             </div>
 
@@ -320,8 +320,8 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 mt-auto py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
-            <p>&copy; 2026 Enterprise Multi-Branch Sales & Distribution System. Running on Docker Compose.</p>
-            <p>PHP 8.3 FPM • Nginx • PostgreSQL 16 • Redis 7</p>
+            <p>&copy; 2026 Enterprise Multi-Branch Sales & Distribution System.</p>
+            <p>Multi-Cabang & Multi-Gudang • Sistem Distribusi Terpadu</p>
         </div>
     </footer>
 

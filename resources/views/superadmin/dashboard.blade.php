@@ -95,16 +95,16 @@
         <!-- Card 4: Platform Security & Isolation -->
         <div class="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-white shadow-sm space-y-3">
             <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-300">Data Isolation Engine</span>
-                <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">RLS ACTIVE</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-300">Perlindungan Privasi Data</span>
+                <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">TERISOLASI AMAN</span>
             </div>
             <div>
-                <span class="text-lg font-extrabold text-white">PostgreSQL RLS + Eloquent</span>
-                <p class="text-[11px] text-slate-300 mt-1">Isolasi data ketat otomatis memproteksi kebocoran antar tenant.</p>
+                <span class="text-lg font-extrabold text-white">Isolasi Data Bertingkat</span>
+                <p class="text-[11px] text-slate-300 mt-1">Pemisahan data otomatis melindungi kerahasiaan antar perusahaan.</p>
             </div>
             <div class="pt-2 border-t border-indigo-900/60 text-[10px] text-indigo-300 flex items-center justify-between">
-                <span>Granular RBAC: <strong>19 Roles</strong></span>
-                <span>Audit Trail: <strong>Immutable</strong></span>
+                <span>Hak Akses Terpadu: <strong>19 Peran</strong></span>
+                <span>Riwayat Aktivitas: <strong>Tercatat Permanen</strong></span>
             </div>
         </div>
     </div>

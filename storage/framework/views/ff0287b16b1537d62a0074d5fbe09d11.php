@@ -10,7 +10,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-center items-center p-4">
+
+    <!-- Navigasi Kembali ke Landing Page -->
+    <div class="max-w-4xl w-full mb-4 flex items-center justify-between">
+        <a href="<?php echo e(route('landing')); ?>" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition">
+            <span>&larr;</span>
+            <span>Kembali ke Beranda Utama</span>
+        </a>
+        <a href="https://phobehub.com" target="_blank" class="text-[11px] text-slate-500 hover:text-slate-400">
+            phobehub.com
+        </a>
+    </div>
 
     <div class="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         <!-- Kolom Kiri: Branding & Informasi Sistem -->
@@ -36,16 +47,16 @@
 
             <div class="p-4 rounded-xl bg-slate-800/80 border border-slate-700/80 space-y-2">
                 <div class="flex items-center justify-between text-xs">
-                    <span class="text-slate-400">Arsitektur Backend</span>
-                    <span class="text-emerald-400 font-semibold">Laravel 11 • PHP 8.3 FPM</span>
+                    <span class="text-slate-400">Keamanan Akses</span>
+                    <span class="text-emerald-400 font-semibold">Enkripsi Data Terlindungi</span>
                 </div>
                 <div class="flex items-center justify-between text-xs">
-                    <span class="text-slate-400">Database & Cache</span>
-                    <span class="text-blue-400 font-semibold">PostgreSQL 16 • Redis 7</span>
+                    <span class="text-slate-400">Cakupan Operasional</span>
+                    <span class="text-blue-400 font-semibold">Multi-Cabang & Multi-Gudang</span>
                 </div>
                 <div class="flex items-center justify-between text-xs">
-                    <span class="text-slate-400">Environment</span>
-                    <span class="text-purple-400 font-semibold">Docker Compose Production Ready</span>
+                    <span class="text-slate-400">Ketersediaan Layanan</span>
+                    <span class="text-purple-400 font-semibold">Sistem Siap Operasional 24/7</span>
                 </div>
             </div>
         </div>
