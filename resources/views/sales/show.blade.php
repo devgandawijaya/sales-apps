@@ -11,11 +11,50 @@
             &larr; Kembali ke Daftar
         </a>
         <div class="flex items-center gap-2">
+            @if($order->status === 'PENDING_APPROVAL')
+                <form action="{{ route('sales.approvals.approve', $order->id) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white shadow-sm transition">
+                        ✓ Setujui SO
+                    </button>
+                </form>
+
+                <button type="button" onclick="document.getElementById('modalRejectDetail').classList.remove('hidden')"
+                        class="px-4 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-xs font-bold text-rose-800 transition">
+                    ✕ Tolak SO
+                </button>
+            @endif
+
+            @if(in_array($order->status, ['APPROVED', 'PROCESSING']))
+                <a href="{{ route('delivery-orders.create') }}?sales_order_id={{ $order->id }}" 
+                   class="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-sm transition">
+                    📦 Terbitkan Surat Jalan (DO)
+                </a>
+            @endif
+
             <button onclick="window.print()" class="px-4 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 transition">
                 🖨️ Cetak Dokumen
             </button>
         </div>
     </div>
+
+    @if(session('success'))
+        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @if($order->status === 'REJECTED' && !empty($order->rejection_reason))
+        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
+            <strong>Alasan Penolakan:</strong> {{ $order->rejection_reason }}
+        </div>
+    @endif
 
     <!-- Main Order Invoice Card -->
     <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-sm space-y-6">
@@ -35,7 +74,11 @@
                     @endif
                 </div>
                 <div>
-                    <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                    <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold
+                        {{ $order->status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : '' }}
+                        {{ $order->status === 'PENDING_APPROVAL' ? 'bg-amber-100 text-amber-800 border border-amber-200' : '' }}
+                        {{ $order->status === 'REJECTED' ? 'bg-rose-100 text-rose-800 border border-rose-200' : '' }}
+                        {{ !in_array($order->status, ['APPROVED', 'PENDING_APPROVAL', 'REJECTED']) ? 'bg-slate-100 text-slate-700 border border-slate-200' : '' }}">
                         Status: {{ $order->status }}
                     </span>
                 </div>
@@ -126,5 +169,35 @@
         </div>
     </div>
 
+</div>
+
+<!-- Modal Reject SO -->
+<div id="modalRejectDetail" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-extrabold text-slate-900">Tolak Sales Order</h3>
+            <button onclick="document.getElementById('modalRejectDetail').classList.add('hidden')" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400">✕</button>
+        </div>
+
+        <form action="{{ route('sales.approvals.reject', $order->id) }}" method="POST" class="space-y-4">
+            @csrf
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Alasan Penolakan *</label>
+                <textarea name="reason" rows="3" required placeholder="Contoh: Plafon kredit toko habis, diskon melebihi toleransi maksimal 5%..."
+                          class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-rose-600 focus:outline-none"></textarea>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                <button type="button" onclick="document.getElementById('modalRejectDetail').classList.add('hidden')"
+                        class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-50 transition">
+                    Batal
+                </button>
+                <button type="submit" 
+                        class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition">
+                    Konfirmasi Penolakan &rarr;
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection

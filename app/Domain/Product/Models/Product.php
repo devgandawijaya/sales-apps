@@ -2,15 +2,19 @@
 
 namespace App\Domain\Product\Models;
 
+use App\Domain\Inventory\Models\Stock;
+use App\Domain\Tenant\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Domain\Inventory\Models\Stock;
 
 class Product extends Model
 {
+    use BelongsToTenant;
+
     protected $table = 'products';
 
     protected $fillable = [
+        'tenant_id',
         'category_id',
         'sku',
         'barcode',
@@ -40,4 +44,3 @@ class Product extends Model
         return $this->hasMany(Stock::class, 'product_id');
     }
 }
-

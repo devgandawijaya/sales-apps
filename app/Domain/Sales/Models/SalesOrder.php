@@ -2,18 +2,22 @@
 
 namespace App\Domain\Sales\Models;
 
+use App\Domain\Customer\Models\Customer;
+use App\Domain\Organization\Models\Branch;
+use App\Domain\Organization\Models\Warehouse;
+use App\Domain\Tenant\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Domain\Organization\Models\Branch;
-use App\Domain\Organization\Models\Warehouse;
-use App\Domain\Customer\Models\Customer;
 
 class SalesOrder extends Model
 {
+    use BelongsToTenant;
+
     protected $table = 'sales_orders';
 
     protected $fillable = [
+        'tenant_id',
         'branch_id',
         'customer_id',
         'salesman_id',
@@ -34,6 +38,8 @@ class SalesOrder extends Model
         'approved_by',
         'approved_at',
         'notes',
+        'quotation_id',
+        'rejection_reason',
     ];
 
     protected $casts = [
@@ -67,5 +73,19 @@ class SalesOrder extends Model
     {
         return $this->hasMany(SalesOrderItem::class, 'sales_order_id');
     }
-}
 
+    public function quotation(): BelongsTo
+    {
+        return $this->belongsTo(SalesQuotation::class, 'quotation_id');
+    }
+
+    public function deliveryOrders(): HasMany
+    {
+        return $this->hasMany(DeliveryOrder::class, 'sales_order_id');
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class, 'sales_order_id');
+    }
+}

@@ -10,18 +10,14 @@ use App\Domain\Sales\Exceptions\CustomerInactiveException;
 use App\Domain\Sales\Exceptions\InsufficientStockException;
 use App\Domain\Sales\Exceptions\OverdueInvoiceBlockedException;
 use App\Domain\Sales\Models\SalesOrder;
+use App\Domain\Sales\Models\SalesOrderApprovalHistory;
+use App\Domain\Security\Services\AuditLoggerService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 /**
- * Enterprise Service for validating and approving Sales Orders (SO).
- * Encapsulates:
- * 1. Pessimistic row locking on Sales Order, Customer, and Inventory Batches.
- * 2. Overdue Invoice Check: Blocks approval if customer has overdue invoices beyond grace period.
- * 3. Credit Limit Check: Verifies combined exposure (outstanding AR + new SO amount).
- * 4. FEFO Stock Reservation: Allocates batches with nearest expiry dates and updates qty_reserved.
- * 5. State Transition & Event Dispatching for background pick-pack-ship orchestration.
+ * Enterprise Service for validating and approving / rejecting Sales Orders (SO).
  */
 class ApproveSalesOrderService
 {
@@ -34,11 +30,6 @@ class ApproveSalesOrderService
      * @param int $approverUserId
      * @param string|null $approvalNotes
      * @return SalesOrder
-     * @throws CustomerInactiveException
-     * @throws OverdueInvoiceBlockedException
-     * @throws CreditLimitExceededException
-     * @throws InsufficientStockException
-     * @throws \Throwable
      */
     public function execute(int $salesOrderId, int $approverUserId, ?string $approvalNotes = null): SalesOrder
     {
@@ -85,88 +76,77 @@ class ApproveSalesOrderService
                 throw new OverdueInvoiceBlockedException(
                     customerName: $customer->name,
                     overdueInvoiceNumber: $blockingInvoice->invoice_number,
-                    overdueDays: (int) $daysOverdue,
-                    outstandingAmount: (float) $blockingInvoice->balance_due
+                    overdueDays: (int)$daysOverdue,
+                    outstandingAmount: (float)$blockingInvoice->balance_due
                 );
             }
 
             // -----------------------------------------------------------------
-            // 4. Validation: Credit Limit Exposure Check (Unless COD)
+            // 4. Validation: Credit Exposure Check (for DRAFT orders needing new credit allocation)
             // -----------------------------------------------------------------
-            $isCredit = strtoupper($customer->payment_type) === 'CREDIT' || $customer->term_of_payment > 0;
-            if ($isCredit) {
-                $projectedCreditExposure = (float) $customer->current_credit_used + (float) $order->grand_total;
-                $creditLimit = (float) $customer->credit_limit;
+            $isCredit = strtoupper((string)$customer->payment_type) === 'CREDIT' || $customer->term_of_payment > 0;
+            $wasPendingApproval = ($order->status === 'PENDING_APPROVAL');
 
-                if ($projectedCreditExposure > $creditLimit) {
+            // If order was DRAFT (not already allocated in PENDING_APPROVAL), check and increment credit
+            if (!$wasPendingApproval && $isCredit) {
+                $newProjectedCredit = (float)$customer->current_credit_used + (float)$order->grand_total;
+                $creditLimit = (float)$customer->credit_limit;
+
+                if ($newProjectedCredit > $creditLimit) {
                     throw new CreditLimitExceededException(
                         customerName: $customer->name,
-                        currentUsed: (float) $customer->current_credit_used,
-                        orderAmount: (float) $order->grand_total,
+                        currentUsed: (float)$customer->current_credit_used,
+                        orderAmount: (float)$order->grand_total,
                         creditLimit: $creditLimit
                     );
                 }
-            }
 
-            // -----------------------------------------------------------------
-            // 5. FEFO Stock Reservation with Pessimistic Row Locking
-            // -----------------------------------------------------------------
-            $orderItems = DB::table('sales_order_items')
-                ->where('sales_order_id', $order->id)
-                ->get();
-
-            if ($orderItems->isEmpty()) {
-                throw new InvalidArgumentException("Sales Order tidak memiliki rincian barang.");
-            }
-
-            foreach ($orderItems as $item) {
-                $qtyNeeded = $item->qty_in_base_uom;
-
-                // Fetch available stocks ordered by FEFO (Earliest Expiry First)
-                $batches = Stock::where('warehouse_id', $order->warehouse_id)
-                    ->where('product_id', $item->product_id)
-                    ->where('expiry_date', '>', Carbon::today()->toDateString()) // Exclude already expired goods
-                    ->orderBy('expiry_date', 'asc')
-                    ->lockForUpdate()
-                    ->get();
-
-                $totalAvailableInWh = $batches->sum(fn ($b) => $b->qty_on_hand - $b->qty_reserved);
-
-                if ($totalAvailableInWh < $qtyNeeded) {
-                    $product = DB::table('products')->where('id', $item->product_id)->first();
-                    throw new InsufficientStockException(
-                        productName: $product?->name ?? 'SKU #' . $item->product_id,
-                        qtyRequested: (int) $qtyNeeded,
-                        qtyAvailable: (int) max(0, $totalAvailableInWh)
-                    );
-                }
-
-                // Reserve quantities across FEFO batches
-                $qtyRemainingToReserve = $qtyNeeded;
-                foreach ($batches as $batch) {
-                    if ($qtyRemainingToReserve <= 0) {
-                        break;
-                    }
-
-                    $batchAvailable = $batch->qty_on_hand - $batch->qty_reserved;
-                    if ($batchAvailable <= 0) {
-                        continue;
-                    }
-
-                    $reserveFromBatch = min($batchAvailable, $qtyRemainingToReserve);
-                    $batch->qty_reserved += $reserveFromBatch;
-                    $batch->save();
-
-                    $qtyRemainingToReserve -= $reserveFromBatch;
-                }
-            }
-
-            // -----------------------------------------------------------------
-            // 6. Update Customer Credit Used & Transition SO Status
-            // -----------------------------------------------------------------
-            if ($isCredit) {
                 $customer->increment('current_credit_used', (float) $order->grand_total);
             }
+
+            // -----------------------------------------------------------------
+            // 5. FEFO Stock Allocation & Locking (if not already reserved)
+            // -----------------------------------------------------------------
+            if (!$wasPendingApproval) {
+                foreach ($order->items as $item) {
+                    $qtyRemainingToReserve = $item->qty_in_base_uom;
+
+                    $stockBatches = Stock::where('warehouse_id', $order->warehouse_id)
+                        ->where('product_id', $item->product_id)
+                        ->whereRaw('qty_on_hand > qty_reserved')
+                        ->where('expiry_date', '>', Carbon::today()->toDateString())
+                        ->orderBy('expiry_date', 'asc')
+                        ->lockForUpdate()
+                        ->get();
+
+                    $totalAvailable = $stockBatches->sum(fn(Stock $stock) => $stock->qty_on_hand - $stock->qty_reserved);
+
+                    if ($totalAvailable < $qtyRemainingToReserve) {
+                        throw new InsufficientStockException(
+                            productSku: $item->product->sku ?? "PRD-{$item->product_id}",
+                            productName: $item->product->name ?? "Product #{$item->product_id}",
+                            requestedQty: $qtyRemainingToReserve,
+                            availableQty: $totalAvailable
+                        );
+                    }
+
+                    foreach ($stockBatches as $stockBatch) {
+                        if ($qtyRemainingToReserve <= 0) {
+                            break;
+                        }
+
+                        $batchAvailable = $stockBatch->qty_on_hand - $stockBatch->qty_reserved;
+                        $reserveFromBatch = min($qtyRemainingToReserve, $batchAvailable);
+
+                        $stockBatch->increment('qty_reserved', $reserveFromBatch);
+                        $qtyRemainingToReserve -= $reserveFromBatch;
+                    }
+                }
+            }
+
+            // -----------------------------------------------------------------
+            // 6. Transition SO Status & Record Approval History
+            // -----------------------------------------------------------------
 
             $nowTimestamp = Carbon::now();
             $order->update([
@@ -179,8 +159,24 @@ class ApproveSalesOrderService
                     : $order->notes,
             ]);
 
+            // Record approval history
+            SalesOrderApprovalHistory::create([
+                'sales_order_id' => $order->id,
+                'user_id' => $approverUserId,
+                'action' => 'APPROVED',
+                'reason' => $approvalNotes ?? 'Sales order disetujui.',
+                'created_at' => $nowTimestamp,
+            ]);
+
+            AuditLoggerService::log(
+                action: 'SALES_ORDER_APPROVED',
+                entityType: 'SalesOrder',
+                entityId: (string) $order->id,
+                newValues: ['status' => 'APPROVED', 'approved_by' => $approverUserId]
+            );
+
             // -----------------------------------------------------------------
-            // 7. Event Dispatching for Pick/Pack/Dispatch Orchestration
+            // 7. Event Dispatching
             // -----------------------------------------------------------------
             SalesOrderApprovedEvent::dispatch(
                 $order,
@@ -191,5 +187,71 @@ class ApproveSalesOrderService
             return $order->fresh(['items', 'customer', 'branch', 'warehouse']);
         });
     }
-}
 
+    /**
+     * Reject a Sales Order with mandatory reason.
+     */
+    public function reject(int $salesOrderId, int $approverUserId, string $reason): SalesOrder
+    {
+        return DB::transaction(function () use ($salesOrderId, $approverUserId, $reason) {
+            /** @var SalesOrder $order */
+            $order = SalesOrder::where('id', $salesOrderId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (!in_array($order->status, ['PENDING_APPROVAL', 'DRAFT'])) {
+                throw new InvalidArgumentException("Hanya Sales Order berstatus 'PENDING_APPROVAL' yang dapat ditolak.");
+            }
+
+            // Release customer credit and stock reservation if previously reserved
+            if ($order->status === 'PENDING_APPROVAL') {
+                $customer = Customer::where('id', $order->customer_id)->lockForUpdate()->first();
+                if ($customer && (float) $customer->current_credit_used >= (float) $order->grand_total) {
+                    $customer->decrement('current_credit_used', (float) $order->grand_total);
+                }
+
+                // Release reserved stock batches
+                foreach ($order->items as $item) {
+                    $qtyToRelease = $item->qty_in_base_uom;
+                    $stockBatches = Stock::where('warehouse_id', $order->warehouse_id)
+                        ->where('product_id', $item->product_id)
+                        ->where('qty_reserved', '>', 0)
+                        ->orderBy('expiry_date', 'desc')
+                        ->lockForUpdate()
+                        ->get();
+
+                    foreach ($stockBatches as $batch) {
+                        if ($qtyToRelease <= 0) break;
+                        $rel = min($qtyToRelease, $batch->qty_reserved);
+                        $batch->decrement('qty_reserved', $rel);
+                        $qtyToRelease -= $rel;
+                    }
+                }
+            }
+
+            $order->update([
+                'status' => 'REJECTED',
+                'rejection_reason' => $reason,
+                'approved_by' => $approverUserId,
+                'approved_at' => Carbon::now(),
+            ]);
+
+            SalesOrderApprovalHistory::create([
+                'sales_order_id' => $order->id,
+                'user_id' => $approverUserId,
+                'action' => 'REJECTED',
+                'reason' => $reason,
+                'created_at' => Carbon::now(),
+            ]);
+
+            AuditLoggerService::log(
+                action: 'SALES_ORDER_REJECTED',
+                entityType: 'SalesOrder',
+                entityId: (string) $order->id,
+                newValues: ['status' => 'REJECTED', 'reason' => $reason]
+            );
+
+            return $order;
+        });
+    }
+}

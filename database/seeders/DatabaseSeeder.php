@@ -1209,5 +1209,10 @@ class DatabaseSeeder extends Seeder
             'created_at' => '2026-10-21 11:00:00',
             'updated_at' => '2026-10-21 11:00:00',
         ]);
+
+        // =====================================================================
+        // SAAS MULTI-TENANCY, SUBSCRIPTION PLANS & 19 RBAC ROLES SEEDER
+        // =====================================================================
+        $this->call(SaasFoundationSeeder::class);
     }
 }

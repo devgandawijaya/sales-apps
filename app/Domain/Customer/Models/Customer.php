@@ -2,19 +2,23 @@
 
 namespace App\Domain\Customer\Models;
 
+use App\Domain\Organization\Models\Branch;
+use App\Domain\Pricing\Models\PriceList;
+use App\Domain\Sales\Models\SalesOrder;
+use App\Domain\Tenant\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use App\Domain\Organization\Models\Branch;
-use App\Domain\Pricing\Models\PriceList;
-use App\Domain\Sales\Models\SalesOrder;
 
 class Customer extends Model
 {
+    use BelongsToTenant;
+
     protected $table = 'customers';
 
     protected $fillable = [
+        'tenant_id',
         'branch_id',
         'code',
         'name',
@@ -50,38 +54,46 @@ class Customer extends Model
 
     public function branch(): BelongsTo
     {
-        return $this->belongsTo(Branch::class, 'branch_id');
+        return $this->belongsTo(Branch::class);
     }
 
     public function priceList(): BelongsTo
     {
-        return $this->belongsTo(PriceList::class, 'price_list_id');
+        return $this->belongsTo(PriceList::class);
     }
 
     public function modernTradeAgreement(): HasOne
     {
-        return $this->hasOne(ModernTradeAgreement::class, 'customer_id')
-            ->where('status', 'ACTIVE');
+        return $this->hasOne(ModernTradeAgreement::class);
     }
 
     public function salesOrders(): HasMany
     {
-        return $this->hasMany(SalesOrder::class, 'customer_id');
-    }
-
-    public function isGeneralTrade(): bool
-    {
-        return strtoupper($this->channel) === 'GT';
+        return $this->hasMany(SalesOrder::class);
     }
 
     public function isModernTrade(): bool
     {
-        return strtoupper($this->channel) === 'MT';
+        return $this->channel === 'MT';
+    }
+
+    public function isGeneralTrade(): bool
+    {
+        return $this->channel === 'GT';
     }
 
     public function availableCredit(): float
     {
-        return max(0, (float)$this->credit_limit - (float)$this->current_credit_used);
+        return (float) max(0, $this->credit_limit - $this->current_credit_used);
+    }
+
+    public function hasAvailableCredit(float $requiredAmount): bool
+    {
+        // If credit limit is 0, consider as strictly cash-only
+        if ($this->credit_limit <= 0) {
+            return false;
+        }
+
+        return ($this->current_credit_used + $requiredAmount) <= $this->credit_limit;
     }
 }
-

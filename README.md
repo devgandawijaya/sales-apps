@@ -18,7 +18,8 @@ Sistem Informasi Manajemen Penjualan dan Distribusi Skala Enterprise (*Multi-Bra
 - [7. Kredensial Akun Bawaan (Demo Accounts)](#7-kredensial-akun-bawaan-demo-accounts)
 - [8. Panduan Fitur & Endpoint Aplikasi](#8-panduan-fitur--endpoint-aplikasi)
 - [9. Perintah Operasional & Pemeliharaan Docker](#9-perintah-operasional--pemeliharaan-docker)
-- [10. Pemecahan Masalah (Troubleshooting)](#10-pemecahan-masalah-troubleshooting)
+- [10. Pengujian Otomatis (Automated Testing)](#10-pengujian-otomatis-automated-testing)
+- [11. Pemecahan Masalah (Troubleshooting)](#11-pemecahan-masalah-troubleshooting)
 
 ---
 
@@ -364,18 +365,45 @@ Semua akun di bawah ini menggunakan kata sandi seragam:
    - Monitoring daftar pesanan masuk dengan indikator kanal (*GT* / *MT*).
    - Tombol **+ Buat Sales Order** (`/sales-orders/create`): formulir pembuatan SO lengkap dengan pilihan multi-satuan (Dus/Pak/Pcs), validasi plafon kredit, dan pengecekan ketersediaan stok FEFO.
    - Halaman detail Sales Order (`/sales-orders/{id}`).
-3. **Data Pelanggan & Plafon Kredit** (`/customers`)
+3. **Penawaran Harga (Sales Quotations)** (`/quotations`)
+   - Penerbitan penawaran harga resmi untuk pelanggan GT & MT dengan masa kedaluwarsa.
+   - Pembekuan harga (*Price Snapshotting*): harga penawaran tersimpan permanen dan tidak terpengaruh fluktuasi master pricelist di masa depan.
+   - Konversi 1-klik penawaran yang disetujui langsung menjadi Sales Order resmi tanpa input ulang.
+4. **Persetujuan Pesanan Penjualan (Sales Approvals)** (`/sales-approvals`)
+   - Dasbor antrean persetujuan Sales Order dengan status `PENDING_APPROVAL` bagi Branch Manager & Sales Supervisor.
+   - Validasi multi-kriteria: pengecekan faktur menunggak (>7 hari overdue memblokir approval), kepatuhan plafon kredit, dan batas toleransi diskon.
+   - Tindakan persetujuan atau penolakan dengan alasan wajib (*mandatory rejection reason*), pelepasan reservasi stok FEFO otomatis, dan pencatatan riwayat persetujuan lengkap.
+5. **Target & Performa Penjualan (Sales Targets & Leaderboard)** (`/sales-targets`)
+   - Penetapan target berkala (Harian, Mingguan, Bulanan, Tahunan) per salesman: target omzet rupiah, kuantitas unit, dan akuisisi pelanggan baru.
+   - Real-time Leaderboard: pemeringkatan salesmen terbaik berdasarkan persentase pencapaian dan total omzet bersih.
+   - Metrik rasio konversi penawaran (*Quotation Conversion Rate*).
+6. **Data Pelanggan & Plafon Kredit** (`/customers`)
    - Daftar toko binaan GT dan gerai modern MT.
    - Pengecekan limit kredit (*Credit Limit*), penggunaan kredit berjalan (*Credit Used*), dan sisa plafon.
-4. **Gudang & Stok FEFO** (`/inventory`)
+7. **Gudang & Stok FEFO** (`/inventory`)
    - Pemantauan stok per gudang (*Central DC*, *Armada Kanvas*, *Gudang Transit*).
    - Informasi nomor batch, tanggal kedaluwarsa, kuantitas fisik (*on-hand*), dan kuantitas teralokasi (*reserved*).
-5. **Keuangan & Jadwal Umur Piutang (AR Aging)** (`/finance`)
-   - Rekap faktur jatuh tempo (kategori 0–30 hari, 31–60 hari, 61–90 hari, dan >90 hari).
-   - Status penerbitan Faktur Pajak dan pelunasan pembayaran.
-6. **Rute & Kunjungan Salesman GT** (`/routes`)
-   - Jadwal *Beat Plan* salesmen per hari.
-   - Log kunjungan toko lapangan lengkap dengan titik koordinat GPS dan status kunjungan.
+8. **Transfer Antar-Gudang & Cabang (Inter-Branch Transfers)** (`/warehouse-transfers`)
+   - Manajemen pergerakan stok antar-fasilitas dengan status berjenjang: *Draft* &rarr; *Submitted* &rarr; *Approved* &rarr; *Dispatched* (*In-Transit*) &rarr; *Received* &rarr; *Completed*.
+   - **Isolasi Transit Ketat**: Pengurangan stok gudang asal saat diberangkatkan (*Dispatch*) tidak akan langsung menambah stok gudang tujuan sebelum barang diverifikasi fisik saat tiba.
+   - Penanganan selisih dan barang rusak (*discrepancy & damage handling*).
+9. **Stock Opname & Cycle Counting** (`/stock-opname`)
+   - Pembekuan (*snapshot*) kuantitas sistem secara otomatis pada awal sesi opname.
+   - Pilihan metode *Cycle Count*, *Wall-to-Wall*, serta mode *Blind Count* (sembunyikan stok buku dari petugas lapangan).
+   - Kalkulasi otomatis variansi selisih fisik vs sistem dan estimasi kerugian/keuntungan nilai COGS (*Cost of Goods Sold*).
+   - Otorisasi persetujuan manajer gudang dan *auto-posting* penyesuaian langsung ke Buku Besar Stok.
+10. **Buku Besar Stok Permanen (Immutable Stock Ledger)** (`/inventory/ledger`)
+    - Buku besar mutasi persediaan berbasis *double-entry* dan *append-only* (tidak dapat diubah atau dihapus).
+    - Mencatat waktu, gudang, produk, batch, nomor dokumen referensi, kuantitas sebelum, perubahan, dan saldo akhir secara akurat.
+11. **Peringatan Dini Kadaluwarsa (Expiry Alerts FEFO)** (`/inventory/expiry-alerts`)
+    - Dasbor analitik batch produk mendekati masa kedaluwarsa dengan kategori urgensi: *Expired* (&le;0 hari), *Critical* (&le;30 hari), *Warning* (&le;60 hari), dan *Notice* (&le;90 hari).
+    - Monitoring total kuantitas stok terikat (*reserved*), kuantitas bebas (*available*), dan valuasi aset persediaan rupiah.
+12. **Keuangan & Jadwal Umur Piutang (AR Aging)** (`/finance`)
+    - Rekap faktur jatuh tempo (kategori 0–30 hari, 31–60 hari, 61–90 hari, dan >90 hari).
+    - Status penerbitan Faktur Pajak dan pelunasan pembayaran.
+13. **Rute & Kunjungan Salesman GT** (`/routes`)
+    - Jadwal *Beat Plan* salesmen per hari.
+    - Log kunjungan toko lapangan lengkap dengan titik koordinat GPS dan status kunjungan.
 
 ---
 
@@ -440,7 +468,77 @@ docker compose restart queue_worker
 
 ---
 
-## 10. Pemecahan Masalah (Troubleshooting)
+## 10. Pengujian Otomatis (Automated Testing)
+
+Sistem telah dilengkapi dengan automated test suite berbasis **PHPUnit** untuk memverifikasi isolasi multi-tenant, penegakan kuota paket langganan, dan otorisasi granular RBAC:
+
+```bash
+# Menjalankan seluruh rangkaian tes otomatis
+./vendor/bin/phpunit
+```
+
+### Skenario Uji Kritis yang Diverifikasi (25 Tests, 118 Assertions):
+
+#### A. Fondasi SaaS, Multi-Tenancy & RBAC (Phase 1):
+1. **`TenantIsolationTest::test_tenant_context_filters_customer_data_strictly`**:
+   - Memastikan data pelanggan Tenant A tidak dapat diakses atau bocor ke Tenant B.
+2. **`TenantIsolationTest::test_belongs_to_tenant_trait_auto_injects_tenant_id`**:
+   - Memastikan setiap model baru otomatis terisi `tenant_id` yang aktif tanpa manipulasi manual.
+3. **`QuotaEnforcementTest::test_quota_service_blocks_adding_users_when_limit_reached`**:
+   - Memastikan sistem menolak penambahan user baru jika batas kuota paket telah tercapai dengan `ValidationException`.
+4. **`QuotaEnforcementTest::test_tenant_manager_service_provisions_complete_tenant_hierarchy`**:
+   - Memverifikasi alur onboarding otomatis (pembuatan Tenant, Subscription, Holding Company, Head Office Branch, Warehouse, dan Akun Owner).
+5. **`RbacPermissionTest::test_user_has_permission_evaluates_correctly`**:
+   - Memastikan evaluasi izin per modul & aksi berfungsi presisi di tingkat backend.
+6. **`RbacPermissionTest::test_superadmin_bypasses_all_permission_checks`**:
+   - Memverifikasi bypass pengawasan tingkat tinggi untuk Superadmin SaaS.
+
+#### B. Inti Penjualan, Penawaran & Alur Persetujuan (Phase 2):
+7. **`SalesQuotationTest::test_can_create_sales_quotation_with_accurate_computations`**:
+   - Memverifikasi pembuatan penawaran harga dengan kalkulasi multi-satuan, subtotal, diskon, PPN 11%, dan validasi status masa berlaku (*expiry date*).
+8. **`SalesQuotationTest::test_can_convert_quotation_to_sales_order_with_frozen_prices`**:
+   - Memverifikasi pembekuan harga (*price snapshotting*) dan konversi 1-klik penawaran menjadi Sales Order resmi berstatus `PENDING_APPROVAL` dengan reservasi stok otomatis.
+9. **`SalesQuotationTest::test_cannot_convert_already_converted_or_rejected_quotation`**:
+   - Mencegah konversi ulang pada penawaran yang sudah diproses atau dibatalkan.
+10. **`SalesApprovalWorkflowTest::test_approving_sales_order_transitions_status_and_records_history`**:
+    - Memverifikasi transisi status Sales Order menjadi `APPROVED`, perekaman audit approval history, dan penerbitan event integrasi.
+11. **`SalesApprovalWorkflowTest::test_rejecting_sales_order_releases_credit_and_reserved_stock`**:
+    - Memastikan penolakan Sales Order mewajibkan alasan penolakan, memulihkan plafon kredit pelanggan yang sempat tertahan, dan melepaskan (*rollback*) kuantitas stok teralokasi (*reserved*).
+12. **`SalesApprovalWorkflowTest::test_approving_sales_order_blocks_when_customer_has_overdue_invoices`**:
+    - Menolak dan memblokir persetujuan Sales Order secara otomatis jika pelanggan memiliki piutang menunggak melebihi masa tenggang (*overdue grace period* > 7 hari).
+13. **`SalesTargetAndPerformanceTest::test_can_create_and_manage_sales_targets`**:
+    - Memverifikasi penetapan target omzet rupiah, kuantitas unit, dan akuisisi pelanggan baru per salesman per periode.
+14. **`SalesTargetAndPerformanceTest::test_monthly_performance_computes_omzet_achievement_and_conversion_rate`**:
+    - Memverifikasi kalkulasi otomatis rasio pencapaian target (*% achievement*), rasio konversi penawaran (*conversion rate*), dan papan peringkat salesman (*sales leaderboard*).
+
+#### C. Pergudangan, Buku Besar Stok & Transfer Transit (Phase 3):
+15. **`ImmutableStockLedgerTest::test_stock_ledger_service_records_accurate_double_entry_balances`**:
+    - Memverifikasi pencatatan mutasi double-entry, saldo sebelum/sesudah, dan pemutakhiran stok fisik atomik.
+16. **`ImmutableStockLedgerTest::test_stock_ledger_entries_are_immutable_and_cannot_be_updated_or_deleted`**:
+    - Memastikan entri buku besar stok tidak dapat diubah (*update*) maupun dihapus (*delete*) pada level model ORM (`RuntimeException`).
+17. **`ImmutableStockLedgerTest::test_stock_ledger_service_prevents_negative_inventory`**:
+    - Mencegah mutasi pengeluaran yang menyebabkan saldo stok fisik menjadi negatif (*negative stock prevention*).
+18. **`InterBranchTransferWorkflowTest::test_inter_branch_transfer_full_lifecycle_with_in_transit_isolation`**:
+    - Memverifikasi siklus transfer antar-gudang (Draft &rarr; Submit &rarr; Approve &rarr; Dispatch &rarr; In-Transit &rarr; Receive &rarr; Completed).
+    - Memastikan isolasi stok transit (stok tujuan **tidak bertambah** sebelum barang tiba secara fisik).
+19. **`InterBranchTransferWorkflowTest::test_inter_branch_transfer_records_partial_receipt_and_discrepancy`**:
+    - Memverifikasi pencatatan penerimaan parsial dan selisih kehilangan barang saat transit (*in-transit discrepancy*).
+20. **`InterBranchTransferWorkflowTest::test_can_reject_transfer_with_mandatory_reason`**:
+    - Memverifikasi penolakan transfer stok dengan alasan penolakan wajib (*mandatory rejection reason*).
+21. **`StockOpnameWorkflowTest::test_stock_opname_freezes_snapshot_and_adjusts_ledger_on_approval`**:
+    - Memverifikasi pembekuan saldo buku saat sesi opname dimulai, input perhitungan fisik, kalkulasi variansi COGS, dan *auto-posting* ke Buku Besar Stok setelah disetujui.
+22. **`StockOpnameWorkflowTest::test_stock_opname_supports_blind_count_mode`**:
+    - Memverifikasi mode *blind count* (menyembunyikan angka stok sistem dari petugas hitung di lapangan).
+23. **`StockOpnameWorkflowTest::test_can_reject_opname_session`**:
+    - Memverifikasi penolakan sesi stock opname yang tidak memenuhi standar SOP audit.
+24. **`InventoryAnalyticsTest::test_detects_near_expiry_batches_with_proper_urgency_severity`**:
+    - Memverifikasi deteksi dini batch mendekati kadaluwarsa dengan klasifikasi keparahan (*Expired*, *Critical*, *Warning*, *Notice*).
+25. **`InventoryAnalyticsTest::test_computes_inventory_valuation_and_quantity_breakdown`**:
+    - Memverifikasi kalkulasi total aset persediaan rupiah (*inventory valuation*), kuantitas on-hand, kuantitas terikat (*reserved*), dan kuantitas bebas (*available*).
+
+---
+
+## 11. Pemecahan Masalah (Troubleshooting)
 
 ### 1. Konflik Port di Komputer Host (Port 8080, 5432, atau 6379 Terpakai)
 Jika port `8080`, `5432`, atau `6379` sudah digunakan oleh aplikasi lain di komputer Anda:

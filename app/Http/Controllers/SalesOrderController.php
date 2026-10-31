@@ -160,5 +160,75 @@ class SalesOrderController extends Controller
 
         return view('sales.show', compact('order', 'items'));
     }
+
+    public function exportOrders(Request $request)
+    {
+        $query = DB::table('sales_orders')
+            ->join('customers', 'sales_orders.customer_id', '=', 'customers.id')
+            ->join('branches', 'sales_orders.branch_id', '=', 'branches.id')
+            ->select(
+                'sales_orders.*',
+                'customers.name as customer_name',
+                'customers.channel as customer_channel',
+                'branches.name as branch_name'
+            )
+            ->orderBy('sales_orders.id', 'desc');
+
+        if ($request->filled('channel')) {
+            $query->where('sales_orders.channel', $request->channel);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('sales_orders.status', $request->status);
+        }
+
+        $orders = $query->get();
+
+        $filename = 'Rekap_Sales_Orders_' . date('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($orders) {
+            $handle = fopen('php://output', 'w');
+            fputs($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, [
+                'No. Sales Order',
+                'Cabang',
+                'Nama Pelanggan',
+                'Kanal (GT/MT)',
+                'Tanggal Pesanan',
+                'Tipe Pesanan',
+                'Status',
+                'Subtotal (IDR)',
+                'Diskon On-Invoice (IDR)',
+                'PPN 11% (IDR)',
+                'Grand Total (IDR)'
+            ]);
+
+            foreach ($orders as $o) {
+                fputcsv($handle, [
+                    $o->so_number,
+                    $o->branch_name,
+                    $o->customer_name,
+                    $o->channel,
+                    $o->order_date,
+                    $o->order_type,
+                    $o->status,
+                    $o->subtotal,
+                    $o->discount_on_invoice,
+                    $o->tax_amount,
+                    $o->grand_total
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
 

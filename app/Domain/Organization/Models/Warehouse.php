@@ -2,16 +2,20 @@
 
 namespace App\Domain\Organization\Models;
 
+use App\Domain\Inventory\Models\Stock;
+use App\Domain\Tenant\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Domain\Inventory\Models\Stock;
 
 class Warehouse extends Model
 {
+    use BelongsToTenant;
+
     protected $table = 'warehouses';
 
     protected $fillable = [
+        'tenant_id',
         'branch_id',
         'code',
         'name',
@@ -34,4 +38,3 @@ class Warehouse extends Model
         return $this->hasMany(Stock::class, 'warehouse_id');
     }
 }
-

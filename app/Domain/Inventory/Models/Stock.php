@@ -2,16 +2,20 @@
 
 namespace App\Domain\Inventory\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Domain\Organization\Models\Warehouse;
 use App\Domain\Product\Models\Product;
+use App\Domain\Tenant\Traits\BelongsToTenant;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Stock extends Model
 {
+    use BelongsToTenant;
+
     protected $table = 'stocks';
 
     protected $fillable = [
+        'tenant_id',
         'warehouse_id',
         'product_id',
         'batch_number',
