@@ -34,7 +34,7 @@ class StockLedgerService
         ?string $expiryDate = null
     ): StockLedgerEntry {
         if ($qtyChange === 0) {
-            throw new InvalidArgumentException("Perubahan kuantitas stok tidak boleh bernilai nol (0).");
+            throw new InvalidArgumentException("Jumlah perubahan stok tidak boleh nol (0).");
         }
 
         return DB::transaction(function () use (
@@ -67,7 +67,7 @@ class StockLedgerService
                 $product = Product::find($productId);
                 $sku = $product ? $product->sku : "PRD-{$productId}";
                 throw new InvalidArgumentException(
-                    "Stok tidak mencukupi untuk {$sku} (Batch: {$batchNumber}) di gudang #{$warehouseId}. Sisa: {$qtyBefore}, diminta: " . abs($qtyChange)
+                    "Stok tidak mencukupi untuk barang {$sku} (Batch {$batchNumber}). Tersedia: {$qtyBefore}, dibutuhkan: " . abs($qtyChange) . "."
                 );
             }
 

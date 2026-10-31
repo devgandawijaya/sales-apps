@@ -199,9 +199,9 @@ class SalesQuotationController extends Controller
             );
 
             return redirect()->route('sales.show', $salesOrder->id)
-                ->with('success', "Penawaran #{$quotation->quotation_number} berhasil dikonversi menjadi Sales Order #{$salesOrder->so_number}.");
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+                ->with('success', "Penawaran #{$quotation->quotation_number} berhasil diproses menjadi Pesanan #{$salesOrder->so_number}.");
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', \App\Support\HumanError::translate($e, 'Pemrosesan pesanan dari penawaran belum berhasil'));
         }
     }
 }

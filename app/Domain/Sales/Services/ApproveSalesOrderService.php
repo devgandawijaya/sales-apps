@@ -31,9 +31,9 @@ class ApproveSalesOrderService
      * @param string|null $approvalNotes
      * @return SalesOrder
      */
-    public function execute(int $salesOrderId, int $approverUserId, ?string $approvalNotes = null): SalesOrder
+    public function execute(int $salesOrderId, int $approverUserId, ?string $approvalNotes = null, bool $forceOverride = false): SalesOrder
     {
-        return DB::transaction(function () use ($salesOrderId, $approverUserId, $approvalNotes) {
+        return DB::transaction(function () use ($salesOrderId, $approverUserId, $approvalNotes, $forceOverride) {
             // -----------------------------------------------------------------
             // 1. Lock and validate Sales Order
             // -----------------------------------------------------------------
@@ -43,7 +43,7 @@ class ApproveSalesOrderService
                 ->firstOrFail();
 
             if (!in_array($order->status, ['PENDING_APPROVAL', 'DRAFT'])) {
-                throw new InvalidArgumentException("Hanya Sales Order berstatus 'PENDING_APPROVAL' atau 'DRAFT' yang dapat disetujui. Status saat ini: {$order->status}");
+                throw new InvalidArgumentException("Hanya pesanan yang berstatus Draf atau Menunggu Persetujuan yang dapat disetujui (Status saat ini: {$order->status}).");
             }
 
             // -----------------------------------------------------------------
@@ -71,7 +71,7 @@ class ApproveSalesOrderService
                 ->orderBy('due_date', 'asc')
                 ->first();
 
-            if ($blockingInvoice) {
+            if ($blockingInvoice && !$forceOverride) {
                 $daysOverdue = Carbon::parse($blockingInvoice->due_date)->diffInDays(Carbon::now());
                 throw new OverdueInvoiceBlockedException(
                     customerName: $customer->name,
@@ -88,7 +88,7 @@ class ApproveSalesOrderService
             $wasPendingApproval = ($order->status === 'PENDING_APPROVAL');
 
             // If order was DRAFT (not already allocated in PENDING_APPROVAL), check and increment credit
-            if (!$wasPendingApproval && $isCredit) {
+            if (!$wasPendingApproval && $isCredit && !$forceOverride) {
                 $newProjectedCredit = (float)$customer->current_credit_used + (float)$order->grand_total;
                 $creditLimit = (float)$customer->credit_limit;
 
@@ -200,7 +200,7 @@ class ApproveSalesOrderService
                 ->firstOrFail();
 
             if (!in_array($order->status, ['PENDING_APPROVAL', 'DRAFT'])) {
-                throw new InvalidArgumentException("Hanya Sales Order berstatus 'PENDING_APPROVAL' yang dapat ditolak.");
+                throw new InvalidArgumentException("Hanya pesanan yang sedang menunggu persetujuan yang dapat ditolak.");
             }
 
             // Release customer credit and stock reservation if previously reserved

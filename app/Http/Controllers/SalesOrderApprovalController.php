@@ -32,17 +32,19 @@ class SalesOrderApprovalController extends Controller
     {
         $approverId = auth()->id() ?? 1;
         $notes = $request->input('notes', 'Disetujui oleh atasan berwenang.');
+        $forceOverride = $request->boolean('force_override', false);
 
         try {
             $order = $this->approveService->execute(
                 salesOrderId: $id,
                 approverUserId: $approverId,
-                approvalNotes: $notes
+                approvalNotes: $notes,
+                forceOverride: $forceOverride
             );
 
-            return redirect()->back()->with('success', "Sales Order #{$order->so_number} berhasil disetujui dan stok FEFO telah dicadangkan.");
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', "Persetujuan gagal: " . $e->getMessage());
+            return redirect()->back()->with('success', "Pesanan #{$order->so_number} berhasil disetujui dan stok barang telah disiapkan.");
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', \App\Support\HumanError::translate($e, 'Persetujuan pesanan belum berhasil'));
         }
     }
 
@@ -64,9 +66,9 @@ class SalesOrderApprovalController extends Controller
                 reason: $validated['reason']
             );
 
-            return redirect()->back()->with('success', "Sales Order #{$order->so_number} telah ditolak dengan alasan: '{$validated['reason']}'.");
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', "Penolakan gagal: " . $e->getMessage());
+            return redirect()->back()->with('success', "Pesanan #{$order->so_number} telah ditolak. Alasan: '{$validated['reason']}'.");
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', \App\Support\HumanError::translate($e, 'Penolakan pesanan belum berhasil'));
         }
     }
 }

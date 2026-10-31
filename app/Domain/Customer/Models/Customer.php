@@ -72,6 +72,26 @@ class Customer extends Model
         return $this->hasMany(SalesOrder::class);
     }
 
+    public function deliveryOrders(): HasMany
+    {
+        return $this->hasMany(\App\Domain\Sales\Models\DeliveryOrder::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(\App\Domain\Sales\Models\Invoice::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(\App\Domain\Sales\Models\Payment::class);
+    }
+
+    public function getBranchNameAttribute(): string
+    {
+        return $this->branch?->name ?? '-';
+    }
+
     public function isModernTrade(): bool
     {
         return $this->channel === 'MT';

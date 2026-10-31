@@ -34,7 +34,7 @@ class ProcessSalesReturnService
         ?int $userId = null
     ): SalesReturn {
         if (!in_array($returnType, ['GOOD_STOCK', 'BAD_STOCK_EXPIRED', 'BAD_STOCK_DAMAGED'])) {
-            throw new InvalidArgumentException("Tipe retur tidak valid. Pilihan: GOOD_STOCK, BAD_STOCK_EXPIRED, BAD_STOCK_DAMAGED.");
+            throw new InvalidArgumentException("Kondisi barang retur tidak valid (Pilihan: Barang Baik, Kedaluwarsa, atau Rusak).");
         }
 
         if (empty($items)) {
@@ -116,7 +116,7 @@ class ProcessSalesReturnService
                 ->firstOrFail();
 
             if ($salesReturn->status !== 'PENDING') {
-                throw new InvalidArgumentException("Hanya retur berstatus 'PENDING' yang dapat disetujui. Status saat ini: {$salesReturn->status}");
+                throw new InvalidArgumentException("Hanya pengajuan retur yang sedang menunggu persetujuan yang dapat disetujui.");
             }
 
             // Post inventory back to warehouse

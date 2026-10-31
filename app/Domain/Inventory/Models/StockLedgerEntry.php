@@ -53,11 +53,11 @@ class StockLedgerEntry extends Model
     protected static function booted(): void
     {
         static::updating(function () {
-            throw new RuntimeException("Pelanggaran Integritas Buku Besar: Entri buku besar stok bersifat permanen dan tidak dapat diubah (IMMUTABLE).");
+            throw new RuntimeException("Catatan mutasi stok bersifat permanen dan tidak dapat diubah.");
         });
 
         static::deleting(function () {
-            throw new RuntimeException("Pelanggaran Integritas Buku Besar: Entri buku besar stok tidak boleh dihapus dari sistem (IMMUTABLE).");
+            throw new RuntimeException("Catatan mutasi stok bersifat permanen dan tidak dapat dihapus.");
         });
     }
 

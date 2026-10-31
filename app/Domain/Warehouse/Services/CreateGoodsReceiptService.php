@@ -38,7 +38,7 @@ class CreateGoodsReceiptService
     public function execute(CreateGoodsReceiptDTO $dto): GoodsReceipt
     {
         if (empty($dto->items)) {
-            throw new InvalidArgumentException("Item penerimaan barang (GRN) tidak boleh kosong.");
+            throw new InvalidArgumentException("Daftar barang penerimaan tidak boleh kosong.");
         }
 
         return DB::transaction(function () use ($dto) {

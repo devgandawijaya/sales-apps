@@ -25,15 +25,15 @@ class DeliveryOrderController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = '%' . $request->search . '%';
+            $search = '%' . strtolower($request->search) . '%';
             $query->where(function ($q) use ($search) {
-                $q->where('do_number', 'like', $search)
-                  ->orWhere('driver_name', 'like', $search)
-                  ->orWhere('vehicle_plate_number', 'like', $search)
+                $q->whereRaw('LOWER(do_number) LIKE ?', [$search])
+                  ->orWhereRaw('LOWER(driver_name) LIKE ?', [$search])
+                  ->orWhereRaw('LOWER(vehicle_plate_number) LIKE ?', [$search])
                   ->orWhereHas('salesOrder', function ($sq) use ($search) {
-                      $sq->where('so_number', 'like', $search)
+                      $sq->whereRaw('LOWER(so_number) LIKE ?', [$search])
                         ->orWhereHas('customer', function ($cq) use ($search) {
-                            $cq->where('name', 'like', $search);
+                            $cq->whereRaw('LOWER(name) LIKE ?', [$search]);
                         });
                   });
             });
@@ -79,9 +79,9 @@ class DeliveryOrderController extends Controller
             );
 
             return redirect()->route('delivery-orders.show', $do->id)
-                ->with('success', "Surat Jalan {$do->do_number} berhasil diterbitkan dan stok telah dialokasikan keluar.");
-        } catch (Throwable $e) {
-            return back()->withInput()->with('error', 'Gagal menerbitkan Surat Jalan: ' . $e->getMessage());
+                ->with('success', "Surat Jalan {$do->do_number} berhasil dibuat dan barang siap dikirim.");
+        } catch (\Throwable $e) {
+            return back()->withInput()->with('error', \App\Support\HumanError::translate($e, 'Gagal membuat Surat Jalan'));
         }
     }
 

@@ -47,58 +47,58 @@
             <a href="{{ route('sales.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('sales.index') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-                <span>Pesanan (Sales Orders)</span>
+                <span>Pesanan Penjualan</span>
             </a>
 
             <a href="{{ route('delivery-orders.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('delivery-orders.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                <span>Surat Jalan (DO)</span>
+                <span>Surat Jalan Pengiriman</span>
             </a>
 
             <a href="{{ route('returns.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('returns.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                <span>Retur Penjualan</span>
+                <span>Pengembalian Barang (Retur)</span>
             </a>
 
             <a href="{{ route('quotations.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('quotations.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <span>Penawaran (Quotations)</span>
+                <span>Surat Penawaran Harga</span>
             </a>
 
             <a href="{{ route('sales.approvals.index') }}" 
                class="flex items-center justify-between px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('sales.approvals.*') ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <div class="flex items-center gap-3">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>Antrean Approval SO</span>
+                    <span>Persetujuan Pesanan</span>
                 </div>
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-500/30 text-amber-300">Auth</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-500/30 text-amber-300">Persetujuan</span>
             </a>
 
             <a href="{{ route('sales.targets.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('sales.targets.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                <span>Target & Leaderboard</span>
+                <span>Target Penjualan Sales</span>
             </a>
 
             <a href="{{ route('sales.create') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('sales.create') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span>+ Buat Sales Order</span>
+                <span>+ Buat Pesanan Baru</span>
             </a>
 
             <a href="{{ route('customers.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('customers.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                <span>Pelanggan & Kredit</span>
+                <span>Data Pelanggan & Kredit</span>
             </a>
 
             <a href="{{ route('routes.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('routes.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-                <span>Rute & Kunjungan GT</span>
+                <span>Jadwal Kunjungan Toko</span>
             </a>
 
             <div class="pt-4 text-[10px] uppercase font-bold text-slate-500 px-3 pb-2 tracking-wider">Logistik & Pergudangan</div>
@@ -106,25 +106,25 @@
             <a href="{{ route('inventory.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('inventory.index') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                <span>Gudang & Stok FEFO</span>
+                <span>Gudang & Stok Barang</span>
             </a>
 
             <a href="{{ route('transfers.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('transfers.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                <span>Transfer Antar-Gudang</span>
+                <span>Pengiriman Antar-Gudang</span>
             </a>
 
             <a href="{{ route('opname.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('opname.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                <span>Stock Opname & Count</span>
+                <span>Pemeriksaan Stok Fisik</span>
             </a>
 
             <a href="{{ route('inventory.ledger') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('inventory.ledger') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                <span>Buku Besar Stok (Ledger)</span>
+                <span>Riwayat Mutasi Stok</span>
             </a>
 
             <a href="{{ route('inventory.expiry-alerts') }}" 
@@ -133,7 +133,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                     <span>Peringatan Kadaluwarsa</span>
                 </div>
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-red-500/30 text-red-300">FEFO</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-red-500/30 text-red-300">KEDALUWARSA</span>
             </a>
 
             <div class="pt-4 text-[10px] uppercase font-bold text-slate-500 px-3 pb-2 tracking-wider">Keuangan & Piutang</div>
@@ -141,21 +141,21 @@
             <a href="{{ route('finance.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('finance.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>Piutang & AR Aging</span>
+                <span>Faktur & Tagihan Piutang</span>
             </a>
 
-            <div class="pt-4 text-[10px] uppercase font-bold text-slate-500 px-3 pb-2 tracking-wider">Keamanan & SaaS</div>
+            <div class="pt-4 text-[10px] uppercase font-bold text-slate-500 px-3 pb-2 tracking-wider">Keamanan & Perusahaan</div>
 
             <a href="{{ route('tenant.settings') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('tenant.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                <span>Kuota & Info Tenant</span>
+                <span>Informasi Perusahaan</span>
             </a>
 
             <a href="{{ route('users.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {{ request()->routeIs('users.*') || request()->routeIs('roles.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'hover:bg-slate-800 text-slate-400 hover:text-white' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                <span>Pengguna & RBAC</span>
+                <span>Pengguna & Hak Akses</span>
             </a>
 
             <a href="{{ route('audit.index') }}" 

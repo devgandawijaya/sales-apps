@@ -32,11 +32,11 @@ class InterBranchTransferService
         ?int $transitWarehouseId = null
     ): StockTransfer {
         if ($fromWarehouseId === $toWarehouseId) {
-            throw new InvalidArgumentException("Gudang asal dan gudang tujuan transfer tidak boleh sama.");
+            throw new InvalidArgumentException("Gudang asal dan gudang tujuan tidak boleh sama.");
         }
 
         if (empty($items)) {
-            throw new InvalidArgumentException("Daftar barang transfer tidak boleh kosong.");
+            throw new InvalidArgumentException("Daftar barang yang dikirim tidak boleh kosong.");
         }
 
         return DB::transaction(function () use (
@@ -95,7 +95,7 @@ class InterBranchTransferService
         $transfer = StockTransfer::findOrFail($transferId);
 
         if (!$transfer->isSubmittable()) {
-            throw new InvalidArgumentException("Hanya transfer berstatus DRAFT yang dapat diajukan.");
+            throw new InvalidArgumentException("Hanya draf pengiriman yang dapat diajukan untuk persetujuan.");
         }
 
         $transfer->update(['status' => 'SUBMITTED']);
@@ -118,7 +118,7 @@ class InterBranchTransferService
         $transfer = StockTransfer::findOrFail($transferId);
 
         if (!$transfer->isApprovable()) {
-            throw new InvalidArgumentException("Transfer #{$transfer->transfer_number} tidak dalam status untuk disetujui (Status: {$transfer->status}).");
+            throw new InvalidArgumentException("Pengiriman #{$transfer->transfer_number} belum siap untuk disetujui (Status: {$transfer->status}).");
         }
 
         $transfer->update([
@@ -152,7 +152,7 @@ class InterBranchTransferService
             $transfer = StockTransfer::where('id', $transferId)->lockForUpdate()->firstOrFail();
 
             if (!$transfer->isDispatchable()) {
-                throw new InvalidArgumentException("Transfer #{$transfer->transfer_number} belum disetujui untuk dikirim (Status: {$transfer->status}).");
+                throw new InvalidArgumentException("Pengiriman #{$transfer->transfer_number} harus disetujui terlebih dahulu sebelum dikirim (Status: {$transfer->status}).");
             }
 
             foreach ($transfer->items as $item) {
@@ -211,7 +211,7 @@ class InterBranchTransferService
             $transfer = StockTransfer::where('id', $transferId)->lockForUpdate()->firstOrFail();
 
             if (!$transfer->isReceivable()) {
-                throw new InvalidArgumentException("Transfer #{$transfer->transfer_number} tidak dalam status perjalanan / IN_TRANSIT (Status: {$transfer->status}).");
+                throw new InvalidArgumentException("Pengiriman #{$transfer->transfer_number} belum berada dalam perjalanan pengiriman (Status: {$transfer->status}).");
             }
 
             $hasDiscrepancy = false;
@@ -291,7 +291,7 @@ class InterBranchTransferService
         $transfer = StockTransfer::findOrFail($transferId);
 
         if (!in_array($transfer->status, ['DRAFT', 'SUBMITTED', 'PENDING_APPROVAL'])) {
-            throw new InvalidArgumentException("Transfer yang sudah dikirim atau selesai tidak dapat ditolak.");
+            throw new InvalidArgumentException("Pengiriman yang sudah diberangkatkan atau selesai tidak dapat ditolak.");
         }
 
         $transfer->update([

@@ -46,7 +46,7 @@ class CreateSalesOrderService
     public function execute(CreateSalesOrderDTO $dto): SalesOrder
     {
         if (empty($dto->items)) {
-            throw new InvalidArgumentException("Item Sales Order tidak boleh kosong.");
+            throw new InvalidArgumentException("Daftar barang pesanan tidak boleh kosong.");
         }
 
         return DB::transaction(function () use ($dto) {
@@ -54,7 +54,6 @@ class CreateSalesOrderService
             // 1. Lock and validate Customer
             // -----------------------------------------------------------------
             $customer = Customer::where('id', $dto->customerId)
-                ->where('branch_id', $dto->branchId)
                 ->lockForUpdate()
                 ->firstOrFail();
 
@@ -64,7 +63,7 @@ class CreateSalesOrderService
 
             // Modern Trade specific validation
             if ($customer->isModernTrade() && empty($dto->poNumberMt)) {
-                throw new InvalidArgumentException("Saluran Modern Trade wajib menyertakan nomor PO resmi pelanggan.");
+                throw new InvalidArgumentException("Pesanan Modern Trade harus menyertakan nomor PO dari pelanggan.");
             }
 
             // -----------------------------------------------------------------

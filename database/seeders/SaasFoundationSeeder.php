@@ -8,6 +8,7 @@ use App\Domain\Security\Services\RbacService;
 use App\Domain\Tenant\Models\Subscription;
 use App\Domain\Tenant\Models\SubscriptionPlan;
 use App\Domain\Tenant\Models\Tenant;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -294,6 +295,30 @@ class SaasFoundationSeeder extends Seeder
         DB::table('payments')->whereNull('tenant_id')->update([
             'tenant_id' => $tenantAId,
         ]);
+
+        if (\Illuminate\Support\Facades\Schema::hasTable('delivery_orders')) {
+            DB::table('delivery_orders')->whereNull('tenant_id')->update([
+                'tenant_id' => $tenantAId,
+            ]);
+        }
+
+        if (\Illuminate\Support\Facades\Schema::hasTable('sales_returns')) {
+            DB::table('sales_returns')->whereNull('tenant_id')->update([
+                'tenant_id' => $tenantAId,
+            ]);
+        }
+
+        if (\Illuminate\Support\Facades\Schema::hasTable('stock_transfers')) {
+            DB::table('stock_transfers')->whereNull('tenant_id')->update([
+                'tenant_id' => $tenantAId,
+            ]);
+        }
+
+        if (\Illuminate\Support\Facades\Schema::hasTable('stock_opnames')) {
+            DB::table('stock_opnames')->whereNull('tenant_id')->update([
+                'tenant_id' => $tenantAId,
+            ]);
+        }
 
         // Map seeded users to their RBAC Roles
         $this->mapUsersToRoles();

@@ -447,8 +447,15 @@ class DatabaseSeeder extends Seeder
         ]);
 
         DB::table('price_list_items')->insert([
+            // Teh Botol (Grosir)
+            ['price_list_id' => $plGtWholesale, 'product_id' => $prodTeh, 'product_unit_id' => $uomTehPcs, 'min_quantity' => 24, 'unit_price' => 3600.00, 'created_at' => now(), 'updated_at' => now()],
+            ['price_list_id' => $plGtWholesale, 'product_id' => $prodTeh, 'product_unit_id' => $uomTehPak, 'min_quantity' => 4, 'unit_price' => 21500.00, 'created_at' => now(), 'updated_at' => now()],
             ['price_list_id' => $plGtWholesale, 'product_id' => $prodTeh, 'product_unit_id' => $uomTehDus, 'min_quantity' => 10, 'unit_price' => 84000.00, 'created_at' => now(), 'updated_at' => now()],
+            // Kopi Aren (Grosir)
+            ['price_list_id' => $plGtWholesale, 'product_id' => $prodKopi, 'product_unit_id' => $uomKopiBtl, 'min_quantity' => 24, 'unit_price' => 6100.00, 'created_at' => now(), 'updated_at' => now()],
             ['price_list_id' => $plGtWholesale, 'product_id' => $prodKopi, 'product_unit_id' => $uomKopiDus, 'min_quantity' => 10, 'unit_price' => 142000.00, 'created_at' => now(), 'updated_at' => now()],
+            // Mie Goreng (Grosir)
+            ['price_list_id' => $plGtWholesale, 'product_id' => $prodMie, 'product_unit_id' => $uomMieBks, 'min_quantity' => 40, 'unit_price' => 2900.00, 'created_at' => now(), 'updated_at' => now()],
             ['price_list_id' => $plGtWholesale, 'product_id' => $prodMie, 'product_unit_id' => $uomMieDus, 'min_quantity' => 20, 'unit_price' => 112000.00, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
@@ -463,8 +470,15 @@ class DatabaseSeeder extends Seeder
         ]);
 
         DB::table('price_list_items')->insert([
+            // Teh Botol (MT Chain - Lengkap Semua Satuan)
+            ['price_list_id' => $plMtChain, 'product_id' => $prodTeh, 'product_unit_id' => $uomTehPcs, 'min_quantity' => 1, 'unit_price' => 3550.00, 'created_at' => now(), 'updated_at' => now()],
+            ['price_list_id' => $plMtChain, 'product_id' => $prodTeh, 'product_unit_id' => $uomTehPak, 'min_quantity' => 1, 'unit_price' => 21000.00, 'created_at' => now(), 'updated_at' => now()],
             ['price_list_id' => $plMtChain, 'product_id' => $prodTeh, 'product_unit_id' => $uomTehDus, 'min_quantity' => 1, 'unit_price' => 83000.00, 'created_at' => now(), 'updated_at' => now()],
+            // Kopi Aren (MT Chain - Termasuk BOTOL & DUS)
+            ['price_list_id' => $plMtChain, 'product_id' => $prodKopi, 'product_unit_id' => $uomKopiBtl, 'min_quantity' => 1, 'unit_price' => 6000.00, 'created_at' => now(), 'updated_at' => now()],
             ['price_list_id' => $plMtChain, 'product_id' => $prodKopi, 'product_unit_id' => $uomKopiDus, 'min_quantity' => 1, 'unit_price' => 140000.00, 'created_at' => now(), 'updated_at' => now()],
+            // Mie Goreng (MT Chain - Termasuk BKS & DUS)
+            ['price_list_id' => $plMtChain, 'product_id' => $prodMie, 'product_unit_id' => $uomMieBks, 'min_quantity' => 1, 'unit_price' => 2850.00, 'created_at' => now(), 'updated_at' => now()],
             ['price_list_id' => $plMtChain, 'product_id' => $prodMie, 'product_unit_id' => $uomMieDus, 'min_quantity' => 1, 'unit_price' => 110000.00, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
@@ -601,6 +615,108 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
+        // Cabang Bandung: GT & MT
+        $custGtPriangan = DB::table('customers')->insertGetId([
+            'branch_id' => $bdgId,
+            'code' => 'CUST-GT-BDG-001',
+            'name' => 'Toko Sembako Priangan Makmur',
+            'owner_name' => 'Kang Asep Suhendar',
+            'channel' => 'GT',
+            'sub_channel' => 'TOKO_KELONTONG',
+            'tax_id_npwp' => '09.432.123.4-421.000',
+            'phone' => '08122334455',
+            'email' => 'priangan.makmur@gmail.com',
+            'address' => 'Jl. Buah Batu No. 112, Lengkong',
+            'city' => 'Bandung',
+            'latitude' => -6.9324100,
+            'longitude' => 107.6251200,
+            'geofence_radius_meters' => 100,
+            'credit_limit' => 25000000.00,
+            'current_credit_used' => 0.00,
+            'term_of_payment' => 14,
+            'payment_type' => 'CREDIT',
+            'price_list_id' => $plGtStandard,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $custMtYogya = DB::table('customers')->insertGetId([
+            'branch_id' => $bdgId,
+            'code' => 'CUST-MT-YOGYA',
+            'name' => 'PT Akur Pratama (Yogya Group DC Kopo)',
+            'owner_name' => 'Direktorat Merchandising Yogya',
+            'channel' => 'MT',
+            'sub_channel' => 'SUPERMARKET',
+            'tax_id_npwp' => '01.456.789.0-422.000',
+            'phone' => '022-5401234',
+            'email' => 'purchasing.dc@yogya.com',
+            'address' => 'Kawasan Industri Kopo Katapang Km 12',
+            'city' => 'Bandung',
+            'latitude' => -6.9854100,
+            'longitude' => 107.5689100,
+            'geofence_radius_meters' => 500,
+            'credit_limit' => 750000000.00,
+            'current_credit_used' => 0.00,
+            'term_of_payment' => 45,
+            'payment_type' => 'CREDIT',
+            'price_list_id' => $plMtChain,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Cabang Surabaya: GT & MT
+        $custGtSumber = DB::table('customers')->insertGetId([
+            'branch_id' => $sbyId,
+            'code' => 'CUST-GT-SBY-001',
+            'name' => 'UD Sumber Rejeki Pasar Turi',
+            'owner_name' => 'Koh William Chandra',
+            'channel' => 'GT',
+            'sub_channel' => 'GROSIR',
+            'tax_id_npwp' => '08.555.444.3-601.000',
+            'phone' => '081333445566',
+            'email' => 'sumber.rejeki.sby@gmail.com',
+            'address' => 'Komplek Pertokoan Pasar Turi Blok D No. 8',
+            'city' => 'Surabaya',
+            'latitude' => -7.2471200,
+            'longitude' => 112.7356100,
+            'geofence_radius_meters' => 150,
+            'credit_limit' => 75000000.00,
+            'current_credit_used' => 0.00,
+            'term_of_payment' => 7,
+            'payment_type' => 'CREDIT',
+            'price_list_id' => $plGtWholesale,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $custMtIndomaret = DB::table('customers')->insertGetId([
+            'branch_id' => $sbyId,
+            'code' => 'CUST-MT-INDOMARET',
+            'name' => 'PT Indomarco Prismatama (DC Gedangan Sidoarjo)',
+            'owner_name' => 'General Manager Merchandising',
+            'channel' => 'MT',
+            'sub_channel' => 'MINIMARKET_CHAIN',
+            'tax_id_npwp' => '01.321.654.9-603.000',
+            'phone' => '031-8912345',
+            'email' => 'receiving.sby@indomaret.co.id',
+            'address' => 'Jl. Raya Gedangan No. 88, Gedangan',
+            'city' => 'Sidoarjo',
+            'latitude' => -7.3821000,
+            'longitude' => 112.7214000,
+            'geofence_radius_meters' => 500,
+            'credit_limit' => 1200000000.00,
+            'current_credit_used' => 0.00,
+            'term_of_payment' => 45,
+            'payment_type' => 'CREDIT',
+            'price_list_id' => $plMtChain,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         // =====================================================================
         // 7. MODERN TRADE AGREEMENTS (MTA CONTRACTS)
         // =====================================================================
@@ -633,6 +749,38 @@ class DatabaseSeeder extends Seeder
                 'payment_terms_days' => 45,
                 'penalty_terms' => 'Service level wajib di atas 95%',
                 'document_attachment_path' => 'contracts/mta_alfamart_2026.pdf',
+                'status' => 'ACTIVE',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'customer_id' => $custMtYogya,
+                'contract_number' => 'MTA-YOGYA-2026-002',
+                'start_date' => '2026-01-01',
+                'end_date' => '2026-12-31',
+                'listing_fee_total' => 50000000.00,
+                'slotting_fee_total' => 25000000.00,
+                'on_invoice_discount_rate' => 3.00,
+                'off_invoice_rebate_rate' => 2.00,
+                'payment_terms_days' => 45,
+                'penalty_terms' => 'Service level pemenuhan PO minimal 90%',
+                'document_attachment_path' => 'contracts/mta_yogya_2026.pdf',
+                'status' => 'ACTIVE',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'customer_id' => $custMtIndomaret,
+                'contract_number' => 'MTA-INDO-2026-005',
+                'start_date' => '2026-01-01',
+                'end_date' => '2026-12-31',
+                'listing_fee_total' => 150000000.00,
+                'slotting_fee_total' => 60000000.00,
+                'on_invoice_discount_rate' => 4.50,
+                'off_invoice_rebate_rate' => 2.50,
+                'payment_terms_days' => 45,
+                'penalty_terms' => 'Lead time pengiriman maksimal 48 jam sejak booking slot',
+                'document_attachment_path' => 'contracts/mta_indomaret_2026.pdf',
                 'status' => 'ACTIVE',
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -768,6 +916,84 @@ class DatabaseSeeder extends Seeder
                 'batch_number' => 'LOT-KOPI-2026-08',
                 'expiry_date' => '2027-02-28',
                 'qty_on_hand' => 480, // 20 Dus
+                'qty_reserved' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'warehouse_id' => $whHqVan,
+                'product_id' => $prodMie,
+                'batch_number' => 'LOT-MIE-2026-10',
+                'expiry_date' => '2027-06-30',
+                'qty_on_hand' => 800, // 20 Dus @ 40 bks
+                'qty_reserved' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        // Stok Gudang Cabang Bandung (WH-BDG-MAIN)
+        DB::table('stocks')->insert([
+            [
+                'warehouse_id' => $whBdgMain,
+                'product_id' => $prodTeh,
+                'batch_number' => 'LOT-TEH-2026-06A',
+                'expiry_date' => '2026-12-31',
+                'qty_on_hand' => 6000, // 250 Dus
+                'qty_reserved' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'warehouse_id' => $whBdgMain,
+                'product_id' => $prodKopi,
+                'batch_number' => 'LOT-KOPI-2026-08',
+                'expiry_date' => '2027-02-28',
+                'qty_on_hand' => 3600, // 150 Dus
+                'qty_reserved' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'warehouse_id' => $whBdgMain,
+                'product_id' => $prodMie,
+                'batch_number' => 'LOT-MIE-2026-10',
+                'expiry_date' => '2027-06-30',
+                'qty_on_hand' => 10000, // 250 Dus
+                'qty_reserved' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        // Stok Gudang Cabang Surabaya (WH-SBY-MAIN)
+        DB::table('stocks')->insert([
+            [
+                'warehouse_id' => $whSbyMain,
+                'product_id' => $prodTeh,
+                'batch_number' => 'LOT-TEH-2026-09B',
+                'expiry_date' => '2027-04-30',
+                'qty_on_hand' => 9600, // 400 Dus
+                'qty_reserved' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'warehouse_id' => $whSbyMain,
+                'product_id' => $prodKopi,
+                'batch_number' => 'LOT-KOPI-2026-08',
+                'expiry_date' => '2027-02-28',
+                'qty_on_hand' => 4800, // 200 Dus
+                'qty_reserved' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'warehouse_id' => $whSbyMain,
+                'product_id' => $prodMie,
+                'batch_number' => 'LOT-MIE-2026-10',
+                'expiry_date' => '2027-06-30',
+                'qty_on_hand' => 16000, // 400 Dus
                 'qty_reserved' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -1214,5 +1440,10 @@ class DatabaseSeeder extends Seeder
         // SAAS MULTI-TENANCY, SUBSCRIPTION PLANS & 19 RBAC ROLES SEEDER
         // =====================================================================
         $this->call(SaasFoundationSeeder::class);
+
+        // =====================================================================
+        // COMPREHENSIVE DUMMY DATA (100+ REALISTIC FMCG BUSINESS RECORDS)
+        // =====================================================================
+        $this->call(ComprehensiveDummyDataSeeder::class);
     }
 }

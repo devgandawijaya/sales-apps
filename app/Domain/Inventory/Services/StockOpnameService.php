@@ -104,7 +104,7 @@ class StockOpnameService
             $opname = StockOpname::where('id', $opnameId)->lockForUpdate()->firstOrFail();
 
             if (!$opname->isEditable()) {
-                throw new InvalidArgumentException("Sesi stock opname #{$opname->opname_number} tidak dapat diubah (Status: {$opname->status}).");
+                throw new InvalidArgumentException("Pemeriksaan stok #{$opname->opname_number} sudah tidak dapat diubah (Status: {$opname->status}).");
             }
 
             $totalCounted = 0;
@@ -170,7 +170,7 @@ class StockOpnameService
             $opname = StockOpname::where('id', $opnameId)->lockForUpdate()->firstOrFail();
 
             if (!$opname->isPostable()) {
-                throw new InvalidArgumentException("Hanya stock opname berstatus SUBMITTED yang dapat diposting (Status saat ini: {$opname->status}).");
+                throw new InvalidArgumentException("Hanya hasil hitung fisik yang sudah diajukan yang dapat disetujui (Status: {$opname->status}).");
             }
 
             foreach ($opname->items as $item) {
@@ -222,7 +222,7 @@ class StockOpnameService
         $opname = StockOpname::findOrFail($opnameId);
 
         if ($opname->status === 'POSTED') {
-            throw new InvalidArgumentException("Stock opname yang telah diposting tidak dapat ditolak.");
+            throw new InvalidArgumentException("Pemeriksaan stok yang sudah disetujui tidak dapat ditolak.");
         }
 
         $opname->update([

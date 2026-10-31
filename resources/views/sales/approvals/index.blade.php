@@ -93,10 +93,19 @@
                                 <div class="flex items-center justify-end space-x-2">
                                     <form action="{{ route('sales.approvals.approve', $order->id) }}" method="POST">
                                         @csrf
-                                        <button type="submit" 
-                                                class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition">
-                                            ✓ Setujui
-                                        </button>
+                                        <input type="hidden" name="force_override" value="1">
+                                        @if($isExceeded)
+                                            <button type="submit" 
+                                                    title="Setujui dengan Otorisasi / Dispensasi Pimpinan"
+                                                    class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition">
+                                                ✓ Setujui (Dispensasi)
+                                            </button>
+                                        @else
+                                            <button type="submit" 
+                                                    class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition">
+                                                ✓ Setujui
+                                            </button>
+                                        @endif
                                     </form>
 
                                     <button type="button" 

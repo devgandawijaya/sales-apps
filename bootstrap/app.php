@@ -23,5 +23,59 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, \Illuminate\Http\Request $request) {
+            $msg = \App\Support\HumanError::translate($e);
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 404);
+            }
+            return redirect()->back()->with('error', $msg);
+        });
+
+        $exceptions->render(function (\App\Domain\Sales\Exceptions\PriceNotFoundException $e, \Illuminate\Http\Request $request) {
+            $msg = \App\Support\HumanError::translate($e);
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->back()->withInput()->with('error', $msg);
+        });
+
+        $exceptions->render(function (\App\Domain\Sales\Exceptions\InsufficientStockException $e, \Illuminate\Http\Request $request) {
+            $msg = \App\Support\HumanError::translate($e);
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->back()->withInput()->with('error', $msg);
+        });
+
+        $exceptions->render(function (\App\Domain\Sales\Exceptions\CreditLimitExceededException $e, \Illuminate\Http\Request $request) {
+            $msg = \App\Support\HumanError::translate($e);
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->back()->withInput()->with('error', $msg);
+        });
+
+        $exceptions->render(function (\App\Domain\Sales\Exceptions\CustomerInactiveException $e, \Illuminate\Http\Request $request) {
+            $msg = \App\Support\HumanError::translate($e);
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->back()->withInput()->with('error', $msg);
+        });
+
+        $exceptions->render(function (\App\Domain\Sales\Exceptions\OverdueInvoiceBlockedException $e, \Illuminate\Http\Request $request) {
+            $msg = \App\Support\HumanError::translate($e);
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->back()->withInput()->with('error', $msg);
+        });
+
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, \Illuminate\Http\Request $request) {
+            $msg = \App\Support\HumanError::translate($e);
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 500);
+            }
+            return redirect()->back()->withInput()->with('error', $msg);
+        });
     })->create();

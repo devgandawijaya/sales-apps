@@ -35,6 +35,10 @@ class SalesOrderController extends Controller
                 'branches.name as branch_name'
             );
 
+        if ($tenantId = \App\Domain\Tenant\TenantContext::getTenantId()) {
+            $query->where('sales_orders.tenant_id', $tenantId);
+        }
+
         if ($request->filled('channel') && in_array($request->channel, ['GT', 'MT'])) {
             $query->where('sales_orders.channel', $request->channel);
         }
@@ -44,10 +48,10 @@ class SalesOrderController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = '%' . $request->search . '%';
+            $search = '%' . strtolower($request->search) . '%';
             $query->where(function ($q) use ($search) {
-                $q->where('sales_orders.so_number', 'ilike', $search)
-                  ->orWhere('customers.name', 'ilike', $search);
+                $q->whereRaw('LOWER(sales_orders.so_number) LIKE ?', [$search])
+                  ->orWhereRaw('LOWER(customers.name) LIKE ?', [$search]);
             });
         }
 
@@ -84,7 +88,7 @@ class SalesOrderController extends Controller
         $customer = Customer::findOrFail($validated['customer_id']);
 
         if ($customer->isModernTrade() && empty($validated['po_number_mt'])) {
-            return back()->withInput()->with('error', 'Saluran Modern Trade (MT) wajib mencantumkan Nomor PO Resmi dari pelanggan.');
+            return back()->withInput()->with('error', 'Pesanan Modern Trade harus menyertakan Nomor Surat Pesanan (PO).');
         }
 
         try {
@@ -110,15 +114,9 @@ class SalesOrderController extends Controller
             $salesOrder = $this->createSalesOrderService->execute($dto);
 
             return redirect()->route('sales.show', $salesOrder->id)
-                ->with('success', 'Sales Order ' . $salesOrder->so_number . ' berhasil dibuat dengan Grand Total Rp ' . number_format($salesOrder->grand_total, 0, ',', '.') . '!');
-        } catch (CreditLimitExceededException $e) {
-            return back()->withInput()->with('error', 'Transaksi Ditolak: ' . $e->getMessage());
-        } catch (InsufficientStockException $e) {
-            return back()->withInput()->with('error', 'Stok Tidak Cukup: ' . $e->getMessage());
-        } catch (CustomerInactiveException $e) {
-            return back()->withInput()->with('error', 'Pelanggan Tidak Aktif: ' . $e->getMessage());
-        } catch (Throwable $e) {
-            return back()->withInput()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+                ->with('success', 'Pesanan #' . $salesOrder->so_number . ' berhasil dibuat dengan total Rp ' . number_format($salesOrder->grand_total, 0, ',', '.') . '.');
+        } catch (\Throwable $e) {
+            return back()->withInput()->with('error', \App\Support\HumanError::translate($e));
         }
     }
 

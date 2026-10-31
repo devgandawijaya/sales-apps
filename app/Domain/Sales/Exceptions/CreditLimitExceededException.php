@@ -17,12 +17,12 @@ class CreditLimitExceededException extends Exception
         
         parent::__construct(
             sprintf(
-                "Plafon kredit pelanggan '%s' terlampaui. Limit: Rp %s, Terpakai: Rp %s, Nilai Order: Rp %s. Melebihi plafon sebesar Rp %s.",
+                "Total pesanan pelanggan '%s' melebihi batas kredit. Batas kredit: Rp %s, terpakai: Rp %s, pesanan saat ini: Rp %s (melebihi batas Rp %s).",
                 $customerName,
-                number_format($creditLimit, 2, ',', '.'),
-                number_format($currentUsed, 2, ',', '.'),
-                number_format($orderAmount, 2, ',', '.'),
-                number_format($exceededBy, 2, ',', '.')
+                number_format($creditLimit, 0, ',', '.'),
+                number_format($currentUsed, 0, ',', '.'),
+                number_format($orderAmount, 0, ',', '.'),
+                number_format($exceededBy, 0, ',', '.')
             )
         );
     }

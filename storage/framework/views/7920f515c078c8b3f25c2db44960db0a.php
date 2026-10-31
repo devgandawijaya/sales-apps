@@ -11,10 +11,16 @@
                 <h3 class="text-base font-bold text-slate-900">Daftar Transaksi Pesanan Penjualan</h3>
                 <p class="text-xs text-slate-500">Mencakup saluran General Trade (Kanvas & TO) serta Modern Trade (PO Ritel)</p>
             </div>
-            <a href="<?php echo e(route('sales.create')); ?>" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                + Buat Sales Order Baru
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="<?php echo e(route('sales.export')); ?>" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-sm">
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Unduh CSV</span>
+                </a>
+                <a href="<?php echo e(route('sales.create')); ?>" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>+ Buat Sales Order Baru</span>
+                </a>
+            </div>
         </div>
 
         <!-- Filter Form -->

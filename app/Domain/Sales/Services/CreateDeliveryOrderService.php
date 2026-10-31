@@ -47,7 +47,7 @@ class CreateDeliveryOrderService
                 ->firstOrFail();
 
             if (!in_array($order->status, ['APPROVED', 'PROCESSING'])) {
-                throw new InvalidArgumentException("Surat Jalan (DO) hanya dapat dibuat untuk Sales Order berstatus 'APPROVED' atau 'PROCESSING'. Status saat ini: {$order->status}");
+                throw new InvalidArgumentException("Surat Jalan hanya dapat dibuat jika pesanan telah disetujui atau sedang diproses (Status saat ini: {$order->status}).");
             }
 
             $doNumber = $this->generateDoNumber($order->branch_id);

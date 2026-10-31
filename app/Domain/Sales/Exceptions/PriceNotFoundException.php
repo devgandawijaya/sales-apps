@@ -8,7 +8,7 @@ class PriceNotFoundException extends Exception
 {
     public function __construct(string $productSku, string $unitName)
     {
-        parent::__construct("Harga tidak ditemukan pada Price List untuk item [{$productSku}] dengan satuan [{$unitName}].");
+        parent::__construct("Harga untuk barang [{$productSku}] dengan satuan {$unitName} belum diatur di daftar harga.");
     }
 }
 

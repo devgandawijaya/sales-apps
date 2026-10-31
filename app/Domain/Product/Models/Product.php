@@ -34,6 +34,11 @@ class Product extends Model
         'is_active' => 'boolean',
     ];
 
+    public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
+
     public function units(): HasMany
     {
         return $this->hasMany(ProductUnit::class, 'product_id');

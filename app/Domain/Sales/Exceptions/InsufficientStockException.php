@@ -14,9 +14,9 @@ class InsufficientStockException extends Exception
     ) {
         parent::__construct(
             sprintf(
-                "Stok tidak mencukupi untuk item [%s] %s. Diminta: %d unit (base UOM), Tersedia: %d unit.",
-                $productSku,
+                "Stok barang '%s' (%s) tidak mencukupi. Dipesan: %d, tersedia: %d.",
                 $productName,
+                $productSku,
                 $requestedQty,
                 $availableQty
             )

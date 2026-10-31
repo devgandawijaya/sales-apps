@@ -13,7 +13,7 @@ class OverdueInvoiceBlockedException extends RuntimeException
         public readonly float $outstandingAmount
     ) {
         parent::__construct(
-            "Persetujuan Sales Order DIBLOKIR: Pelanggan '{$customerName}' memiliki faktur jatuh tempo '{$overdueInvoiceNumber}' yang telah menunggak {$overdueDays} hari sebesar Rp " . number_format($outstandingAmount, 0, ',', '.') . ". Harap lunasi atau minta dispensasi Direksi."
+            "Pesanan pelanggan '{$customerName}' belum dapat disetujui karena ada tagihan lewat jatuh tempo (Faktur #{$overdueInvoiceNumber}, terlambat {$overdueDays} hari senilai Rp " . number_format($outstandingAmount, 0, ',', '.') . "). Anda dapat menggunakan persetujuan dispensasi jika pesanan ini diizinkan untuk diproses."
         );
     }
 }

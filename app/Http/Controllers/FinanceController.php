@@ -24,9 +24,24 @@ class FinanceController extends Controller
 
     public function index(Request $request)
     {
-        $invoices = Invoice::with(['customer', 'branch', 'deliveryOrder'])
-            ->orderBy('id', 'desc')
-            ->paginate(15);
+        $invQuery = Invoice::with(['customer', 'branch', 'deliveryOrder'])->orderBy('id', 'desc');
+
+        if ($request->filled('status')) {
+            $invQuery->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = '%' . strtolower($request->search) . '%';
+            $invQuery->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(invoice_number) LIKE ?', [$search])
+                  ->orWhereRaw('LOWER(tax_invoice_number) LIKE ?', [$search])
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->whereRaw('LOWER(name) LIKE ?', [$search]);
+                  });
+            });
+        }
+
+        $invoices = $invQuery->paginate(15)->withQueryString();
 
         // Calculate AR Aging
         $allPending = Invoice::with('customer')
@@ -104,9 +119,9 @@ class FinanceController extends Controller
             );
 
             return redirect()->route('finance.invoices.show', $invoice->id)
-                ->with('success', "Faktur Penjualan {$invoice->invoice_number} berhasil diterbitkan dengan NSFP {$invoice->tax_invoice_number}.");
-        } catch (Throwable $e) {
-            return back()->withInput()->with('error', 'Gagal menerbitkan faktur: ' . $e->getMessage());
+                ->with('success', "Faktur penjualan {$invoice->invoice_number} berhasil dibuat (Nomor Faktur Pajak: {$invoice->tax_invoice_number}).");
+        } catch (\Throwable $e) {
+            return back()->withInput()->with('error', \App\Support\HumanError::translate($e, 'Gagal membuat faktur'));
         }
     }
 
@@ -183,9 +198,9 @@ class FinanceController extends Controller
             );
 
             return redirect()->route('finance.index')
-                ->with('success', "Pembayaran {$payment->payment_number} senilai Rp " . number_format($payment->amount, 0, ',', '.') . " berhasil dicatat dan saldo piutang telah berkurang.");
-        } catch (Throwable $e) {
-            return back()->withInput()->with('error', 'Gagal mencatat pembayaran: ' . $e->getMessage());
+                ->with('success', "Pembayaran {$payment->payment_number} sebesar Rp " . number_format($payment->amount, 0, ',', '.') . " berhasil dicatat.");
+        } catch (\Throwable $e) {
+            return back()->withInput()->with('error', \App\Support\HumanError::translate($e, 'Gagal mencatat pembayaran'));
         }
     }
 

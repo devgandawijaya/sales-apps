@@ -22,16 +22,20 @@ class InventoryController extends Controller
                 'products.base_uom'
             );
 
+        if ($tenantId = \App\Domain\Tenant\TenantContext::getTenantId()) {
+            $query->where('stocks.tenant_id', $tenantId);
+        }
+
         if ($request->filled('warehouse_id')) {
             $query->where('stocks.warehouse_id', $request->warehouse_id);
         }
 
         if ($request->filled('search')) {
-            $search = '%' . $request->search . '%';
+            $search = '%' . strtolower($request->search) . '%';
             $query->where(function ($q) use ($search) {
-                $q->where('products.name', 'ilike', $search)
-                  ->orWhere('products.sku', 'ilike', $search)
-                  ->orWhere('stocks.batch_number', 'ilike', $search);
+                $q->whereRaw('LOWER(products.name) LIKE ?', [$search])
+                  ->orWhereRaw('LOWER(products.sku) LIKE ?', [$search])
+                  ->orWhereRaw('LOWER(stocks.batch_number) LIKE ?', [$search]);
             });
         }
 

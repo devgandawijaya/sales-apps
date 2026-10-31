@@ -106,7 +106,36 @@ class PricingEngineService
             return (float) $channelPriceItem->unit_price;
         }
 
-        // Fallback: If no price found, throw exception
+        // Priority 3: Fallback across any active price list for this exact unit
+        $anyActivePrice = (clone $query)->whereHas('priceList', function ($q) {
+            $q->where('is_active', true);
+        })->first();
+
+        if ($anyActivePrice) {
+            return (float) $anyActivePrice->unit_price;
+        }
+
+        // Priority 4: Proportional conversion from another priced unit of this product
+        $otherPricedItem = PriceListItem::where('product_id', $product->id)
+            ->whereHas('priceList', fn($q) => $q->where('is_active', true))
+            ->with('productUnit')
+            ->first();
+
+        if ($otherPricedItem && $otherPricedItem->productUnit) {
+            $otherFactor = max(1, (int)$otherPricedItem->productUnit->conversion_factor);
+            $basePrice = (float)$otherPricedItem->unit_price / $otherFactor;
+            $currentFactor = max(1, (int)$unit->conversion_factor);
+            return round($basePrice * $currentFactor, 2);
+        }
+
+        // Priority 5: Cost-Plus markup fallback (Standard COGS + 25% margin)
+        $cogs = (float)($product->cogs_standard ?? $product->cost_price ?? 5000);
+        $currentFactor = max(1, (int)$unit->conversion_factor);
+        if ($cogs > 0) {
+            return round($cogs * 1.25 * $currentFactor, 2);
+        }
+
+        // Final fallback: If no price or cost found at all, throw exception
         throw new PriceNotFoundException($product->sku, $unit->unit_name);
     }
 }

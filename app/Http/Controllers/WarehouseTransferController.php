@@ -58,17 +58,21 @@ class WarehouseTransferController extends Controller
 
         $userId = Auth::id() ?? 1;
 
-        $transfer = $this->transferService->createTransfer(
-            fromWarehouseId: (int) $validated['from_warehouse_id'],
-            toWarehouseId: (int) $validated['to_warehouse_id'],
-            items: $validated['items'],
-            userId: $userId,
-            notes: $validated['notes'] ?? null,
-            transitWarehouseId: !empty($validated['transit_warehouse_id']) ? (int) $validated['transit_warehouse_id'] : null
-        );
+        try {
+            $transfer = $this->transferService->createTransfer(
+                fromWarehouseId: (int) $validated['from_warehouse_id'],
+                toWarehouseId: (int) $validated['to_warehouse_id'],
+                items: $validated['items'],
+                userId: $userId,
+                notes: $validated['notes'] ?? null,
+                transitWarehouseId: !empty($validated['transit_warehouse_id']) ? (int) $validated['transit_warehouse_id'] : null
+            );
 
-        return redirect()->route('transfers.show', $transfer->id)
-            ->with('success', "Transfer stok #{$transfer->transfer_number} berhasil dibuat (Status: DRAFT).");
+            return redirect()->route('transfers.show', $transfer->id)
+                ->with('success', "Pengiriman antar-gudang #{$transfer->transfer_number} berhasil dibuat dalam draf.");
+        } catch (\Throwable $e) {
+            return back()->withInput()->with('error', \App\Support\HumanError::translate($e, 'Gagal membuat pengiriman antar-gudang'));
+        }
     }
 
     public function show(int $id)
@@ -81,19 +85,27 @@ class WarehouseTransferController extends Controller
 
     public function submit(int $id)
     {
-        $transfer = $this->transferService->submitTransfer($id);
+        try {
+            $transfer = $this->transferService->submitTransfer($id);
 
-        return redirect()->route('transfers.show', $transfer->id)
-            ->with('success', "Transfer #{$transfer->transfer_number} berhasil diajukan untuk persetujuan.");
+            return redirect()->route('transfers.show', $transfer->id)
+                ->with('success', "Pengiriman #{$transfer->transfer_number} berhasil diajukan untuk persetujuan.");
+        } catch (\Throwable $e) {
+            return back()->with('error', \App\Support\HumanError::translate($e, 'Pengajuan pengiriman belum berhasil'));
+        }
     }
 
     public function approve(int $id)
     {
         $userId = Auth::id() ?? 1;
-        $transfer = $this->transferService->approveTransfer($id, $userId);
+        try {
+            $transfer = $this->transferService->approveTransfer($id, $userId);
 
-        return redirect()->route('transfers.show', $transfer->id)
-            ->with('success', "Transfer #{$transfer->transfer_number} telah disetujui. Siap untuk proses pengiriman.");
+            return redirect()->route('transfers.show', $transfer->id)
+                ->with('success', "Pengiriman #{$transfer->transfer_number} telah disetujui dan siap dikirimkan.");
+        } catch (\Throwable $e) {
+            return back()->with('error', \App\Support\HumanError::translate($e, 'Persetujuan pengiriman belum berhasil'));
+        }
     }
 
     public function dispatch(Request $request, int $id)
@@ -103,14 +115,18 @@ class WarehouseTransferController extends Controller
             'vehicle_number' => 'nullable|string|max:30',
         ]);
 
-        $transfer = $this->transferService->dispatchTransfer(
-            transferId: $id,
-            driverName: $validated['driver_name'] ?? null,
-            vehicleNumber: $validated['vehicle_number'] ?? null
-        );
+        try {
+            $transfer = $this->transferService->dispatchTransfer(
+                transferId: $id,
+                driverName: $validated['driver_name'] ?? null,
+                vehicleNumber: $validated['vehicle_number'] ?? null
+            );
 
-        return redirect()->route('transfers.show', $transfer->id)
-            ->with('success', "Transfer #{$transfer->transfer_number} berhasil diberangkatkan. Status sekarang: IN_TRANSIT.");
+            return redirect()->route('transfers.show', $transfer->id)
+                ->with('success', "Pengiriman #{$transfer->transfer_number} berhasil diberangkatkan dan sedang dalam perjalanan.");
+        } catch (\Throwable $e) {
+            return back()->with('error', \App\Support\HumanError::translate($e, 'Pemberangkatan pengiriman belum berhasil'));
+        }
     }
 
     public function receive(Request $request, int $id)
@@ -125,15 +141,19 @@ class WarehouseTransferController extends Controller
 
         $userId = Auth::id() ?? 1;
 
-        $transfer = $this->transferService->receiveTransfer(
-            transferId: $id,
-            receiverId: $userId,
-            receivedItems: $validated['items'],
-            receivedNotes: $validated['received_notes'] ?? null
-        );
+        try {
+            $transfer = $this->transferService->receiveTransfer(
+                transferId: $id,
+                receiverId: $userId,
+                receivedItems: $validated['items'],
+                receivedNotes: $validated['received_notes'] ?? null
+            );
 
-        return redirect()->route('transfers.show', $transfer->id)
-            ->with('success', "Transfer #{$transfer->transfer_number} berhasil diterima di gudang tujuan.");
+            return redirect()->route('transfers.show', $transfer->id)
+                ->with('success', "Barang kiriman #{$transfer->transfer_number} berhasil diterima di gudang tujuan.");
+        } catch (\Throwable $e) {
+            return back()->with('error', \App\Support\HumanError::translate($e, 'Penerimaan pengiriman belum berhasil'));
+        }
     }
 
     public function reject(Request $request, int $id)
@@ -144,14 +164,18 @@ class WarehouseTransferController extends Controller
 
         $userId = Auth::id() ?? 1;
 
-        $transfer = $this->transferService->rejectTransfer(
-            transferId: $id,
-            approverId: $userId,
-            reason: $validated['reason']
-        );
+        try {
+            $transfer = $this->transferService->rejectTransfer(
+                transferId: $id,
+                approverId: $userId,
+                reason: $validated['reason']
+            );
 
-        return redirect()->route('transfers.show', $transfer->id)
-            ->with('warning', "Transfer #{$transfer->transfer_number} telah ditolak.");
+            return redirect()->route('transfers.show', $transfer->id)
+                ->with('warning', "Pengiriman #{$transfer->transfer_number} telah ditolak.");
+        } catch (\Throwable $e) {
+            return back()->with('error', \App\Support\HumanError::translate($e, 'Penolakan pengiriman belum berhasil'));
+        }
     }
 }
 

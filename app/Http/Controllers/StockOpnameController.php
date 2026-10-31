@@ -55,18 +55,22 @@ class StockOpnameController extends Controller
 
         $userId = Auth::id() ?? 1;
 
-        $opname = $this->opnameService->startOpname(
-            branchId: (int) $validated['branch_id'],
-            warehouseId: (int) $validated['warehouse_id'],
-            title: $validated['title'],
-            userId: $userId,
-            countType: $validated['count_type'],
-            blindCount: (bool) ($validated['blind_count'] ?? false),
-            notes: $validated['notes'] ?? null
-        );
+        try {
+            $opname = $this->opnameService->startOpname(
+                branchId: (int) $validated['branch_id'],
+                warehouseId: (int) $validated['warehouse_id'],
+                title: $validated['title'],
+                userId: $userId,
+                countType: $validated['count_type'],
+                blindCount: (bool) ($validated['blind_count'] ?? false),
+                notes: $validated['notes'] ?? null
+            );
 
-        return redirect()->route('opname.show', $opname->id)
-            ->with('success', "Sesi Stock Opname #{$opname->opname_number} berhasil dimulai. Stok sistem telah dibekukan (snapshot).");
+            return redirect()->route('opname.show', $opname->id)
+                ->with('success', "Pemeriksaan stok fisik #{$opname->opname_number} berhasil dimulai.");
+        } catch (\Throwable $e) {
+            return back()->withInput()->with('error', \App\Support\HumanError::translate($e, 'Gagal memulai pemeriksaan stok'));
+        }
     }
 
     public function show(int $id)
@@ -87,19 +91,27 @@ class StockOpnameController extends Controller
             'items.*.notes' => 'nullable|string|max:255',
         ]);
 
-        $opname = $this->opnameService->recordCount($id, $validated['items']);
+        try {
+            $opname = $this->opnameService->recordCount($id, $validated['items']);
 
-        return redirect()->route('opname.show', $opname->id)
-            ->with('success', "Hasil perhitungan fisik berhasil disimpan. Menunggu persetujuan penyesuaian (SUBMITTED).");
+            return redirect()->route('opname.show', $opname->id)
+                ->with('success', "Hasil hitung fisik berhasil disimpan dan sedang menunggu persetujuan.");
+        } catch (\Throwable $e) {
+            return back()->with('error', \App\Support\HumanError::translate($e, 'Gagal menyimpan hasil hitung fisik'));
+        }
     }
 
     public function postAdjustment(int $id)
     {
         $userId = Auth::id() ?? 1;
-        $opname = $this->opnameService->approveAndPost($id, $userId);
+        try {
+            $opname = $this->opnameService->approveAndPost($id, $userId);
 
-        return redirect()->route('opname.show', $opname->id)
-            ->with('success', "Stock Opname #{$opname->opname_number} telah disetujui & penyesuaian stok berhasil diposting ke buku besar.");
+            return redirect()->route('opname.show', $opname->id)
+                ->with('success', "Pemeriksaan stok #{$opname->opname_number} telah disetujui dan jumlah stok telah diperbarui.");
+        } catch (\Throwable $e) {
+            return back()->with('error', \App\Support\HumanError::translate($e, 'Penyesuaian stok belum berhasil'));
+        }
     }
 
     public function reject(Request $request, int $id)
@@ -109,10 +121,14 @@ class StockOpnameController extends Controller
         ]);
 
         $userId = Auth::id() ?? 1;
-        $opname = $this->opnameService->rejectOpname($id, $userId, $validated['reason']);
+        try {
+            $opname = $this->opnameService->rejectOpname($id, $userId, $validated['reason']);
 
-        return redirect()->route('opname.show', $opname->id)
-            ->with('warning', "Stock Opname #{$opname->opname_number} telah ditolak.");
+            return redirect()->route('opname.show', $opname->id)
+                ->with('warning', "Pemeriksaan stok #{$opname->opname_number} telah ditolak.");
+        } catch (\Throwable $e) {
+            return back()->with('error', \App\Support\HumanError::translate($e, 'Penolakan pemeriksaan stok belum berhasil'));
+        }
     }
 }
 

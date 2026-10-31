@@ -49,7 +49,7 @@ class TenantController extends Controller
         // Auto-login newly created tenant owner
         Auth::login($result['user']);
 
-        return redirect()->route('dashboard')->with('success', "Selamat datang di platform Sales & Distribution! Perusahaan {$result['tenant']->name} berhasil diinisialisasi.");
+        return redirect()->route('dashboard')->with('success', "Selamat datang! Perusahaan {$result['tenant']->name} berhasil didaftarkan dan siap digunakan.");
     }
 
     /**

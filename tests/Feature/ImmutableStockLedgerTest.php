@@ -165,7 +165,7 @@ class ImmutableStockLedgerTest extends TestCase
             $entry->update(['qty_change' => 999]);
             $this->fail("Buku besar stok seharusnya tidak boleh diubah (updating).");
         } catch (RuntimeException $e) {
-            $this->assertStringContainsString('Pelanggaran Integritas Buku Besar', $e->getMessage());
+            $this->assertStringContainsString('Catatan mutasi stok bersifat permanen', $e->getMessage());
         }
 
         // Attempt to delete ledger entry must throw RuntimeException
@@ -173,7 +173,7 @@ class ImmutableStockLedgerTest extends TestCase
             $entry->delete();
             $this->fail("Buku besar stok seharusnya tidak boleh dihapus (deleting).");
         } catch (RuntimeException $e) {
-            $this->assertStringContainsString('Pelanggaran Integritas Buku Besar', $e->getMessage());
+            $this->assertStringContainsString('Catatan mutasi stok bersifat permanen', $e->getMessage());
         }
     }
 

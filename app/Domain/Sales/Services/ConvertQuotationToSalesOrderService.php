@@ -24,7 +24,7 @@ class ConvertQuotationToSalesOrderService
     public function execute(SalesQuotation $quotation, int $warehouseId, ?string $poNumberMt = null): SalesOrder
     {
         if (!$quotation->isConvertible()) {
-            throw new InvalidArgumentException("Penawaran #{$quotation->quotation_number} tidak dapat dikonversi (Status saat ini: {$quotation->status}).");
+            throw new InvalidArgumentException("Penawaran #{$quotation->quotation_number} sudah tidak dapat diproses menjadi pesanan (Status: {$quotation->status}).");
         }
 
         return DB::transaction(function () use ($quotation, $warehouseId, $poNumberMt) {

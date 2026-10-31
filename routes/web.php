@@ -80,8 +80,14 @@ Route::post('/sales-orders/{id}/reject', [SalesOrderApprovalController::class, '
 Route::get('/sales-targets', [SalesTargetController::class, 'index'])->name('sales.targets.index');
 Route::post('/sales-targets', [SalesTargetController::class, 'store'])->name('sales.targets.store');
 
-// Pelanggan & Plafon Kredit
+// Pelanggan & Plafon Kredit (Full CRUD)
 Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
+Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+Route::get('/customers/{id}', [CustomerController::class, 'show'])->name('customers.show');
+Route::get('/customers/{id}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
+Route::put('/customers/{id}', [CustomerController::class, 'update'])->name('customers.update');
+Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->name('customers.destroy');
 
 // Gudang & Stok FEFO
 Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');

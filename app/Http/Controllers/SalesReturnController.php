@@ -33,11 +33,11 @@ class SalesReturnController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = '%' . $request->search . '%';
+            $search = '%' . strtolower($request->search) . '%';
             $query->where(function ($q) use ($search) {
-                $q->where('return_number', 'like', $search)
+                $q->whereRaw('LOWER(return_number) LIKE ?', [$search])
                   ->orWhereHas('customer', function ($cq) use ($search) {
-                      $cq->where('name', 'like', $search);
+                      $cq->whereRaw('LOWER(name) LIKE ?', [$search]);
                   });
             });
         }
@@ -99,9 +99,9 @@ class SalesReturnController extends Controller
             );
 
             return redirect()->route('returns.show', $salesReturn->id)
-                ->with('success', "Permintaan retur {$salesReturn->return_number} berhasil dibuat dan menunggu persetujuan (approval).");
-        } catch (Throwable $e) {
-            return back()->withInput()->with('error', 'Gagal membuat retur penjualan: ' . $e->getMessage());
+                ->with('success', "Pengajuan pengembalian barang {$salesReturn->return_number} berhasil dibuat dan menunggu persetujuan.");
+        } catch (\Throwable $e) {
+            return back()->withInput()->with('error', \App\Support\HumanError::translate($e, 'Gagal membuat pengajuan retur'));
         }
     }
 
@@ -129,9 +129,9 @@ class SalesReturnController extends Controller
             );
 
             return redirect()->route('returns.show', $salesReturn->id)
-                ->with('success', "Retur {$salesReturn->return_number} telah disetujui. Stok telah masuk ke gudang tujuan dan kredit pelanggan telah disesuaikan.");
-        } catch (Throwable $e) {
-            return back()->with('error', 'Gagal menyetujui retur: ' . $e->getMessage());
+                ->with('success', "Pengembalian barang {$salesReturn->return_number} telah disetujui. Stok barang dan saldo tagihan pelanggan telah diperbarui.");
+        } catch (\Throwable $e) {
+            return back()->with('error', \App\Support\HumanError::translate($e, 'Persetujuan retur belum berhasil'));
         }
     }
 }

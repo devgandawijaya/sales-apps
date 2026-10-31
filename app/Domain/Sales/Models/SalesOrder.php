@@ -69,6 +69,16 @@ class SalesOrder extends Model
         return $this->belongsTo(Customer::class, 'customer_id');
     }
 
+    public function salesman(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'salesman_id');
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'approved_by');
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(SalesOrderItem::class, 'sales_order_id');
@@ -87,5 +97,10 @@ class SalesOrder extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class, 'sales_order_id');
+    }
+
+    public function returns(): HasMany
+    {
+        return $this->hasMany(SalesReturn::class, 'sales_order_id');
     }
 }
