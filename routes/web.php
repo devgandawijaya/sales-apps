@@ -23,6 +23,8 @@ use App\Http\Controllers\StockLedgerController;
 use App\Http\Controllers\DeliveryOrderController;
 use App\Http\Controllers\SalesReturnController;
 use App\Http\Controllers\LandingSettingController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PriceListController;
 use App\Models\LandingSlide;
 use App\Models\LandingSetting;
 use App\Domain\Tenant\TenantContext;
@@ -145,6 +147,26 @@ Route::get('/customers/{id}', [CustomerController::class, 'show'])->name('custom
 Route::get('/customers/{id}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
 Route::put('/customers/{id}', [CustomerController::class, 'update'])->name('customers.update');
 Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+
+// Master Produk & Satuan Multi-UOM (Full CRUD)
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
+Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
+Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+
+// Master Daftar Harga & Matriks Diskon Satuan (Price Lists)
+Route::get('/price-lists', [PriceListController::class, 'index'])->name('price-lists.index');
+Route::get('/price-lists/create', [PriceListController::class, 'create'])->name('price-lists.create');
+Route::post('/price-lists', [PriceListController::class, 'store'])->name('price-lists.store');
+Route::get('/price-lists/{id}', [PriceListController::class, 'show'])->name('price-lists.show');
+Route::get('/price-lists/{id}/edit', [PriceListController::class, 'edit'])->name('price-lists.edit');
+Route::put('/price-lists/{id}', [PriceListController::class, 'update'])->name('price-lists.update');
+Route::delete('/price-lists/{id}', [PriceListController::class, 'destroy'])->name('price-lists.destroy');
+Route::post('/price-lists/{id}/items', [PriceListController::class, 'storeItem'])->name('price-lists.items.store');
+Route::delete('/price-lists/{id}/items/{itemId}', [PriceListController::class, 'destroyItem'])->name('price-lists.items.destroy');
 
 // Gudang & Stok FEFO
 Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');

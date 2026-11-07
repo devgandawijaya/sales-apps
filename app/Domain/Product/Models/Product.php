@@ -48,4 +48,14 @@ class Product extends Model
     {
         return $this->hasMany(Stock::class, 'product_id');
     }
+
+    public function priceListItems(): HasMany
+    {
+        return $this->hasMany(\App\Domain\Pricing\Models\PriceListItem::class, 'product_id');
+    }
+
+    public function salesOrderItems(): HasMany
+    {
+        return $this->hasMany(\App\Domain\Sales\Models\SalesOrderItem::class, 'product_id');
+    }
 }

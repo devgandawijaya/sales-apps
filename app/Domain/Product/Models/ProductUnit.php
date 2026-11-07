@@ -26,5 +26,10 @@ class ProductUnit extends Model
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
+
+    public function getIsBaseAttribute(): bool
+    {
+        return (bool) $this->is_base_unit;
+    }
 }
 

@@ -29,5 +29,10 @@ class PriceList extends Model
     {
         return $this->hasMany(PriceListItem::class, 'price_list_id');
     }
+
+    public function customers(): HasMany
+    {
+        return $this->hasMany(\App\Domain\Customer\Models\Customer::class, 'price_list_id');
+    }
 }
 

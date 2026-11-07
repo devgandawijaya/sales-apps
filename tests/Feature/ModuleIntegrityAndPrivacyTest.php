@@ -174,6 +174,8 @@ class ModuleIntegrityAndPrivacyTest extends TestCase
         $routes = [
             '/dashboard',
             '/customers',
+            '/products',
+            '/price-lists',
             '/sales-orders',
             '/finance',
             '/inventory',
@@ -388,5 +390,18 @@ class ModuleIntegrityAndPrivacyTest extends TestCase
         $superRes->assertStatus(200);
         $this->assertStringNotContainsString('PostgreSQL RLS', $superRes->getContent());
         $this->assertStringNotContainsString('Granular RBAC', $superRes->getContent());
+
+        // 6. Check Products & Price Lists Views
+        $prodRes = $this->actingAs($this->user)->get('/products');
+        $prodRes->assertStatus(200);
+        foreach ($techForbidden as $tech) {
+            $this->assertStringNotContainsString($tech, $prodRes->getContent(), "Technical term '{$tech}' leaked on /products");
+        }
+
+        $plRes = $this->actingAs($this->user)->get('/price-lists');
+        $plRes->assertStatus(200);
+        foreach ($techForbidden as $tech) {
+            $this->assertStringNotContainsString($tech, $plRes->getContent(), "Technical term '{$tech}' leaked on /price-lists");
+        }
     }
 }
